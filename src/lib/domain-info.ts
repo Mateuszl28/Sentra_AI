@@ -16,6 +16,8 @@ export type DomainInfo = {
   ageDays: number | null;
   /** True if RDAP succeeded but the registry returned no registration date. */
   unknown: boolean;
+  mx: string[];
+  mxNull: boolean;
 };
 
 type RdapEvent = { eventAction?: string; eventDate?: string };
@@ -53,6 +55,8 @@ function extractRegistrarFromEntities(entities: RdapEntity[] | undefined): strin
   return null;
 }
 
+import { isNullMx, lookupMx, parseMxRecord } from "./dns";
+
 export async function lookupDomainInfo(host: string): Promise<DomainInfo | null> {
   const cleaned = host
     .toLowerCase()
@@ -68,13 +72,17 @@ export async function lookupDomainInfo(host: string): Promise<DomainInfo | null>
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(`${RDAP_BASE}${registrable}`, {
-      headers: { accept: "application/rdap+json" },
-      signal: ac.signal,
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as RdapResponse;
+    const [rdapRes, mxLookup] = await Promise.all([
+      fetch(`${RDAP_BASE}${registrable}`, {
+        headers: { accept: "application/rdap+json" },
+        signal: ac.signal,
+        cache: "no-store",
+      }).catch(() => null),
+      lookupMx(registrable).catch(() => null),
+    ]);
+
+    if (!rdapRes || !rdapRes.ok) return null;
+    const data = (await rdapRes.json()) as RdapResponse;
 
     const events = Array.isArray(data.events) ? data.events : [];
     const findEvent = (action: string) =>
@@ -94,6 +102,13 @@ export async function lookupDomainInfo(host: string): Promise<DomainInfo | null>
       }
     }
 
+    const mxRecords = mxLookup?.records ?? [];
+    const mxParsed = mxRecords
+      .map(parseMxRecord)
+      .filter((p): p is { priority: number; host: string } => p !== null)
+      .sort((a, b) => a.priority - b.priority)
+      .map((p) => `${p.priority} ${p.host}`);
+
     return {
       domain: registrable,
       registered,
@@ -103,6 +118,8 @@ export async function lookupDomainInfo(host: string): Promise<DomainInfo | null>
       status: Array.isArray(data.status) ? data.status : [],
       ageDays,
       unknown: !registered,
+      mx: mxParsed,
+      mxNull: isNullMx(mxRecords),
     };
   } catch {
     return null;

@@ -92,6 +92,17 @@ export type LlmAnalysis = {
   educationalTakeaway: string;
 };
 
+export type AgreementBand = "aligned" | "split" | "conflict";
+
+export type AgreementSummary = {
+  band: AgreementBand;
+  heuristicScore: number;
+  llmScore: number;
+  delta: number;
+  label: string;
+  explanation: string;
+};
+
 export type AnalysisResponse = {
   parsed: {
     fromHeader: string | null;
@@ -107,7 +118,9 @@ export type AnalysisResponse = {
     receivedChain: ReceivedHop[];
   };
   heuristicFindings: HeuristicFinding[];
+  heuristicScore: number;
   analysis: LlmAnalysis;
+  agreement: AgreementSummary;
   meta: {
     model: string;
     latencyMs: number;
@@ -160,6 +173,8 @@ export type DomainInfoSummary = {
   status: string[];
   ageDays: number | null;
   unknown: boolean;
+  mx: string[];
+  mxNull: boolean;
 };
 
 export type UrlInspectionResponse = {

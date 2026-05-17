@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { computeAgreement } from "@/lib/agreement";
 import { runHeuristics } from "@/lib/heuristics";
 import { runGeminiAnalysis } from "@/lib/gemini";
 import type { AnalysisResponse } from "@/lib/types";
@@ -34,11 +35,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { parsed, findings } = await runHeuristics(raw);
+    const { parsed, findings, heuristicScore } = await runHeuristics(raw);
     const { analysis, latencyMs, model } = await runGeminiAnalysis(
       parsed,
       findings,
     );
+    const agreement = computeAgreement(heuristicScore, analysis);
 
     const response: AnalysisResponse = {
       parsed: {
@@ -55,7 +57,9 @@ export async function POST(req: Request) {
         receivedChain: parsed.receivedChain,
       },
       heuristicFindings: findings,
+      heuristicScore,
       analysis,
+      agreement,
       meta: { model, latencyMs },
     };
     return NextResponse.json(response);

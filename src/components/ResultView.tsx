@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   ClipboardCopy,
   Code2,
+  GitMerge,
   GraduationCap,
   Mail,
   Sparkles,
@@ -17,6 +18,7 @@ import type { AnalysisResponse } from "@/lib/types";
 import { AnnotatedSource } from "./AnnotatedSource";
 import { FollowUpChat } from "./FollowUpChat";
 import { HeaderForensics } from "./HeaderForensics";
+import { HtmlPreview } from "./HtmlPreview";
 import { RedFlagCard } from "./RedFlagCard";
 import { RiskGauge } from "./RiskGauge";
 import { ShareButton } from "./ShareButton";
@@ -69,7 +71,12 @@ export function ResultView({
           <div className="flex items-center gap-6">
             <RiskGauge score={analysis.riskScore} verdict={analysis.verdict} />
             <div className="space-y-3">
-              <VerdictBadge verdict={analysis.verdict} size="lg" />
+              <div className="flex flex-wrap items-center gap-2">
+                <VerdictBadge verdict={analysis.verdict} size="lg" />
+                {data.agreement ? (
+                  <AgreementBadge agreement={data.agreement} />
+                ) : null}
+              </div>
               <p className="max-w-xl text-[15px] leading-relaxed text-slate-200">
                 {analysis.summary}
               </p>
@@ -147,6 +154,8 @@ export function ResultView({
       {parsed.receivedChain && parsed.receivedChain.length > 0 ? (
         <HeaderForensics chain={parsed.receivedChain} />
       ) : null}
+
+      <HtmlPreview rawEmail={rawEmail} />
 
       <section className="space-y-3">
         <div className="flex items-center gap-2">
@@ -313,6 +322,31 @@ function Panel({
       </div>
       {children}
     </div>
+  );
+}
+
+function AgreementBadge({
+  agreement,
+}: {
+  agreement: NonNullable<AnalysisResponse["agreement"]>;
+}) {
+  const palette =
+    agreement.band === "aligned"
+      ? "bg-emerald-500/10 text-emerald-300 ring-emerald-400/40"
+      : agreement.band === "split"
+        ? "bg-amber-500/10 text-amber-300 ring-amber-400/40"
+        : "bg-rose-500/10 text-rose-300 ring-rose-400/40";
+  return (
+    <span
+      title={`${agreement.explanation}\n\nHeuristics ${agreement.heuristicScore} · Gemini ${agreement.llmScore} · Δ ${agreement.delta}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1 ring-inset ${palette}`}
+    >
+      <GitMerge size={11} strokeWidth={2.4} />
+      {agreement.label}
+      <span className="font-mono text-[10px] tabular-nums opacity-80">
+        Δ{agreement.delta}
+      </span>
+    </span>
   );
 }
 

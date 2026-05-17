@@ -557,6 +557,29 @@ function DomainInfoCard({ info }: { info: DomainInfoSummary }) {
           mono
         />
       </dl>
+      {info.mx.length > 0 || info.mxNull ? (
+        <div className="mt-3 surface-flat p-3">
+          <div className="kicker mb-1.5">MX records · DNS over HTTPS</div>
+          {info.mxNull ? (
+            <p className="text-xs text-rose-200">
+              <strong>Null MX</strong> (RFC 7505) — domain explicitly accepts
+              no email. Strong phishing-only-infrastructure signal.
+            </p>
+          ) : (
+            <ul className="grid gap-1 font-mono text-[11px] text-slate-200">
+              {info.mx.slice(0, 4).map((m, i) => (
+                <li key={i} className="truncate" title={m}>
+                  {m}
+                </li>
+              ))}
+              {info.mx.length > 4 ? (
+                <li className="text-muted">… and {info.mx.length - 4} more</li>
+              ) : null}
+            </ul>
+          )}
+        </div>
+      ) : null}
+
       {info.unknown ? (
         <p className="mt-3 text-xs text-muted">
           The registry returned no registration date — common for ccTLDs (e.g.
