@@ -44,13 +44,25 @@ export function ResultView({
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur">
-        <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+      <div className="surface-elev relative overflow-hidden p-6">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-32 -right-32 h-72 w-72 rounded-full opacity-30 blur-3xl"
+          style={{
+            background:
+              analysis.verdict === "PHISHING"
+                ? "radial-gradient(circle, rgba(244,63,94,0.6), transparent 60%)"
+                : analysis.verdict === "SUSPICIOUS"
+                  ? "radial-gradient(circle, rgba(251,191,36,0.5), transparent 60%)"
+                  : "radial-gradient(circle, rgba(52,211,153,0.5), transparent 60%)",
+          }}
+        />
+        <div className="relative flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-6">
             <RiskGauge score={analysis.riskScore} verdict={analysis.verdict} />
             <div className="space-y-3">
               <VerdictBadge verdict={analysis.verdict} size="lg" />
-              <p className="max-w-xl text-sm leading-relaxed text-slate-300">
+              <p className="max-w-xl text-[15px] leading-relaxed text-slate-200">
                 {analysis.summary}
               </p>
             </div>
@@ -61,10 +73,10 @@ export function ResultView({
               <button
                 type="button"
                 onClick={copyReport}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition ${
                   copied
                     ? "bg-emerald-500/15 text-emerald-200 ring-emerald-500/40"
-                    : "bg-slate-900/60 text-slate-200 ring-slate-700 hover:bg-slate-800"
+                    : "border hairline bg-slate-900/60 text-slate-200 hover:bg-slate-800"
                 }`}
               >
                 {copied ? (
@@ -78,13 +90,13 @@ export function ResultView({
                 )}
               </button>
             </div>
-            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted">
               <Sparkles size={11} /> {meta.model} · {meta.latencyMs} ms
             </span>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+        <div className="relative mt-6 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
           <Stat label="From" value={parsed.fromAddress ?? "—"} mono />
           <Stat label="Subject" value={parsed.subject ?? "—"} />
           <Stat
@@ -256,8 +268,8 @@ function Stat({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+    <div className="surface-flat p-3">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted">
         {label}
       </div>
       <div
@@ -280,7 +292,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="surface p-5">
       <div className="mb-3 flex items-center gap-2">
         {icon}
         <h3 className="text-sm font-semibold tracking-tight text-slate-100">

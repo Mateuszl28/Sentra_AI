@@ -62,15 +62,22 @@ export function EmailInput({
 
   return (
     <div className="grid gap-4">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-1.5 shadow-[0_0_60px_-20px_rgba(56,189,248,0.15)] backdrop-blur">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] text-slate-400">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span className="ml-2 font-mono tracking-tight">
-              paste raw email · including headers
+      <div className="surface-elev p-1.5">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2 text-[11px] text-muted">
+          <span className="inline-flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-400/80" />
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
             </span>
+            <span className="font-mono uppercase tracking-[0.18em]">
+              paste raw email · headers + body
+            </span>
+            {value.length > 0 ? (
+              <span className="ml-2 font-mono text-[10px] tabular-nums text-slate-500">
+                {value.length.toLocaleString()} chars
+              </span>
+            ) : null}
           </span>
           {value ? (
             <button
@@ -80,7 +87,7 @@ export function EmailInput({
                 setActiveExample(null);
                 onReset();
               }}
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted transition hover:bg-slate-800/70 hover:text-slate-200"
             >
               <X size={11} /> clear
             </button>
@@ -94,7 +101,7 @@ export function EmailInput({
           }}
           spellCheck={false}
           placeholder={`From: "PayPal" <support@paypa1-secure.com>\nSubject: URGENT — verify your account within 24 hours\n…`}
-          className="block min-h-[260px] w-full resize-y rounded-2xl bg-slate-950/60 px-4 py-3 font-mono text-[12.5px] leading-relaxed text-slate-200 placeholder:text-slate-600 outline-none ring-1 ring-inset ring-slate-800/80 focus:ring-sky-500/60 scrollbar-thin"
+          className="block min-h-[280px] w-full resize-y rounded-xl bg-[rgba(2,6,23,0.55)] px-4 py-3 font-mono text-[12.5px] leading-relaxed text-slate-200 placeholder:text-slate-600 outline-none ring-1 ring-inset ring-[var(--border)] transition focus:ring-sky-500/60 scrollbar-thin"
         />
       </div>
 
@@ -112,13 +119,13 @@ export function EmailInput({
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            className="btn-ghost"
           >
             <Upload size={13} />
             Upload .eml
           </button>
-          <span className="hidden text-[11px] text-slate-500 sm:inline">
-            or pick an example →
+          <span className="hidden text-[11px] text-muted sm:inline">
+            or pick a sample below →
           </span>
         </div>
 
@@ -126,7 +133,7 @@ export function EmailInput({
           type="button"
           disabled={!value.trim() || loading}
           onClick={onAnalyze}
-          className="group inline-flex items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-sky-400 to-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_8px_30px_-10px_rgba(56,189,248,0.6)] transition-all hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100 sm:self-auto"
+          className="btn-primary"
         >
           {loading ? (
             <>
@@ -142,36 +149,33 @@ export function EmailInput({
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <span className="self-center text-[11px] uppercase tracking-[0.18em] text-slate-500">
-          examples →
-        </span>
-        {EXAMPLES.map((ex) => (
-          <button
-            key={ex.id}
-            type="button"
-            onClick={() => loadExample(ex)}
-            title={ex.description}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
-              activeExample === ex.id
-                ? "bg-sky-500/15 text-sky-200 ring-sky-400/40"
-                : "bg-slate-900/40 text-slate-300 ring-slate-700 hover:bg-slate-800/70 hover:text-slate-100"
-            }`}
-          >
-            {ex.label}
-            <span
-              className={`ml-2 rounded-full px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider ${
-                ex.expected === "PHISHING"
-                  ? "bg-rose-500/20 text-rose-300"
-                  : ex.expected === "SUSPICIOUS"
-                    ? "bg-amber-500/20 text-amber-300"
-                    : "bg-emerald-500/20 text-emerald-300"
+      <div className="flex flex-wrap gap-1.5">
+        <span className="kicker self-center mr-1">samples</span>
+        {EXAMPLES.map((ex) => {
+          const tone =
+            ex.expected === "PHISHING"
+              ? "bg-rose-500/15 text-rose-300"
+              : ex.expected === "SUSPICIOUS"
+                ? "bg-amber-500/15 text-amber-300"
+                : "bg-emerald-500/15 text-emerald-300";
+          const active = activeExample === ex.id;
+          return (
+            <button
+              key={ex.id}
+              type="button"
+              onClick={() => loadExample(ex)}
+              title={ex.description}
+              className={`group inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium ring-1 ring-inset transition ${
+                active
+                  ? "bg-sky-500/15 text-sky-200 ring-sky-400/40"
+                  : "border hairline bg-slate-900/40 text-slate-300 hover:bg-slate-800/70 hover:text-slate-100"
               }`}
             >
-              {ex.expected}
-            </span>
-          </button>
-        ))}
+              <span className={`h-1 w-1 rounded-full ${tone}`} />
+              {ex.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -187,19 +191,20 @@ function LiveHeuristicChips({
   if (!hasContent) return null;
   if (findings.length === 0) {
     return (
-      <div className="flex items-center gap-2 text-[11px] text-slate-500">
-        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
+      <div className="flex items-center gap-2 text-[11px] text-muted animate-fade-in">
+        <span className="relative inline-flex h-1.5 w-1.5">
+          <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        </span>
         <span className="font-mono uppercase tracking-[0.18em]">
-          Live check · no obvious red flags yet
+          Live check · scanning for red flags
         </span>
       </div>
     );
   }
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-        live check ·
-      </span>
+    <div className="flex flex-wrap items-center gap-1.5 animate-fade-in">
+      <span className="kicker mr-1">live check</span>
       {findings.map((f) => {
         const Icon =
           f.tone === "danger"
