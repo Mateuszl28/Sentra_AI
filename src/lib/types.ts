@@ -35,6 +35,18 @@ export type ReceivedHop = {
   gapMs: number | null;
 };
 
+export type DkimInspectionResult = {
+  signingDomain: string | null;
+  selector: string | null;
+  algorithm: string | null;
+  canonicalization: string | null;
+  headersSigned: string[] | null;
+  keyStatus: "present" | "revoked" | "missing" | "malformed" | "lookup-failed";
+  publicKeyAlgorithm: string | null;
+  publicKeySnippet: string | null;
+  notes: string[];
+};
+
 export type ParsedEmail = {
   raw: string;
   fromHeader: string | null;
@@ -116,6 +128,7 @@ export type AnalysisResponse = {
     linkCount: number;
     attachmentCount: number;
     receivedChain: ReceivedHop[];
+    dkim: DkimInspectionResult[];
   };
   heuristicFindings: HeuristicFinding[];
   heuristicScore: number;

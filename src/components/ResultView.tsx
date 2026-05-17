@@ -16,9 +16,11 @@ import { useState } from "react";
 import { buildMarkdownReport } from "@/lib/report";
 import type { AnalysisResponse } from "@/lib/types";
 import { AnnotatedSource } from "./AnnotatedSource";
+import { DkimInspection } from "./DkimInspection";
 import { FollowUpChat } from "./FollowUpChat";
 import { HeaderForensics } from "./HeaderForensics";
 import { HtmlPreview } from "./HtmlPreview";
+import { MitreBadge } from "./MitreBadge";
 import { RedFlagCard } from "./RedFlagCard";
 import { RiskGauge } from "./RiskGauge";
 import { ShareButton } from "./ShareButton";
@@ -155,6 +157,10 @@ export function ResultView({
         <HeaderForensics chain={parsed.receivedChain} />
       ) : null}
 
+      {parsed.dkim && parsed.dkim.length > 0 ? (
+        <DkimInspection reports={parsed.dkim} />
+      ) : null}
+
       <HtmlPreview rawEmail={rawEmail} />
 
       <section className="space-y-3">
@@ -253,7 +259,7 @@ export function ResultView({
                     : "cursor-default"
                 } ${focusedFlagId === f.id ? "ring-1 ring-sky-400/60" : ""}`}
               >
-                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                   <span className="rounded bg-slate-800/80 px-1.5 py-0.5 font-mono uppercase tracking-wider">
                     {f.severity}
                   </span>
@@ -262,6 +268,9 @@ export function ResultView({
                   </span>
                   <span className="font-semibold text-slate-200">
                     {f.title}
+                  </span>
+                  <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
+                    <MitreBadge findingId={f.id} compact />
                   </span>
                 </div>
                 <p className="mt-1.5 text-slate-400">{f.detail}</p>

@@ -22,6 +22,7 @@ import type {
   UrlInspectionResponse,
   UrlVerdict,
 } from "@/lib/types";
+import { MitreBadge } from "./MitreBadge";
 import { RedFlagCard } from "./RedFlagCard";
 import { RiskGauge } from "./RiskGauge";
 
@@ -463,7 +464,7 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
                 key={f.id}
                 className="surface-flat p-3"
               >
-                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                   <span
                     className={`rounded px-1.5 py-0.5 font-mono uppercase tracking-wider ${
                       SEVERITY_PILL[f.severity]
@@ -473,6 +474,9 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
                   </span>
                   <span className="font-semibold text-slate-200">
                     {f.title}
+                  </span>
+                  <span className="ml-auto">
+                    <MitreBadge findingId={f.id} compact />
                   </span>
                 </div>
                 <p className="mt-1.5 text-slate-400">{f.detail}</p>

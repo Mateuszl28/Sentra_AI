@@ -7,7 +7,6 @@ import {
   GraduationCap,
   Inbox,
   Link2,
-  Loader2,
   ShieldAlert,
   Share2,
   SplitSquareHorizontal,
@@ -22,6 +21,7 @@ import { EmailInput } from "@/components/EmailInput";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { InboxSimulator } from "@/components/InboxSimulator";
 import { Insights } from "@/components/Insights";
+import { ResultSkeleton } from "@/components/ResultSkeleton";
 import { ResultView } from "@/components/ResultView";
 import { ShortcutsPanel } from "@/components/ShortcutsPanel";
 import { MobileTabStrip, Sidebar, type Mode } from "@/components/Sidebar";
@@ -33,14 +33,6 @@ import { clearShareFromHash, readShareFromHash } from "@/lib/share";
 import type { AnalysisResponse } from "@/lib/types";
 import { useHistory } from "@/lib/useHistory";
 
-const LOADING_STAGES = [
-  "Parsing MIME structure…",
-  "Inspecting SPF / DKIM / DMARC…",
-  "Resolving sender reputation…",
-  "Decomposing links and attachments…",
-  "Asking Gemini for the verdict…",
-];
-
 export default function HomePage() {
   const [mode, setMode] = useState<Mode>("analyze");
   const [raw, setRaw] = useState("");
@@ -48,7 +40,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
-  const [stage, setStage] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -59,16 +50,6 @@ export default function HomePage() {
   const inputRef = useRef<HTMLDivElement>(null);
   const history = useHistory();
   const toast = useToast();
-
-  useEffect(() => {
-    if (!loading) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStage(0);
-    const id = window.setInterval(() => {
-      setStage((s) => (s + 1) % LOADING_STAGES.length);
-    }, 800);
-    return () => window.clearInterval(id);
-  }, [loading]);
 
   useEffect(() => {
     if (result && resultRef.current) {
@@ -306,22 +287,16 @@ export default function HomePage() {
                     {error}
                   </div>
                 ) : null}
-                {loading ? (
-                  <div className="surface flex items-center justify-center gap-3 px-4 py-6 text-sm text-slate-300 animate-fade-in">
-                    <Loader2 size={16} className="animate-spin text-sky-300" />
-                    <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted">
-                      {LOADING_STAGES[stage]}
-                    </span>
-                  </div>
-                ) : null}
               </section>
 
               <div ref={resultRef} className="mt-10 scroll-mt-6">
-                {result ? (
+                {loading ? (
+                  <ResultSkeleton />
+                ) : result ? (
                   <div className="animate-fade-up">
                     <ResultView data={result} rawEmail={raw} />
                   </div>
-                ) : !loading && !error ? (
+                ) : !error ? (
                   <FeatureGrid />
                 ) : null}
               </div>

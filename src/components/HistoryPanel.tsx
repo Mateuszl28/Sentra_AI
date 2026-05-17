@@ -2,6 +2,7 @@
 
 import {
   Clock,
+  Download,
   History as HistoryIcon,
   Link2,
   Mail,
@@ -10,6 +11,55 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 import type { HistoryEntry } from "@/lib/useHistory";
+
+function csvEscape(v: string | number): string {
+  const s = String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function entriesToCsv(entries: HistoryEntry[]): string {
+  const header = [
+    "id",
+    "kind",
+    "label",
+    "verdict",
+    "risk_score",
+    "timestamp_iso",
+    "payload_preview",
+  ];
+  const lines = [header.join(",")];
+  for (const e of entries) {
+    lines.push(
+      [
+        csvEscape(e.id),
+        csvEscape(e.kind),
+        csvEscape(e.label),
+        csvEscape(e.verdict),
+        csvEscape(e.riskScore),
+        csvEscape(new Date(e.timestamp).toISOString()),
+        csvEscape(e.payload.replace(/\s+/g, " ").slice(0, 200)),
+      ].join(","),
+    );
+  }
+  return lines.join("\r\n");
+}
+
+function downloadCsv(entries: HistoryEntry[]) {
+  const csv = entriesToCsv(entries);
+  const blob = new Blob(["﻿" + csv], {
+    type: "text/csv;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  a.href = url;
+  a.download = `sentra-history-${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 const VERDICT_PILL: Record<string, string> = {
   SAFE: "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30",
@@ -67,17 +117,27 @@ export function HistoryPanel({
           </div>
           <div className="flex items-center gap-1">
             {entries.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm("Clear all history? This can't be undone.")) {
-                    onClear();
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-slate-400 hover:bg-slate-900 hover:text-rose-300"
-              >
-                <Trash2 size={11} /> clear
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => downloadCsv(entries)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-slate-400 transition hover:bg-slate-900 hover:text-sky-300"
+                  title="Export session as CSV"
+                >
+                  <Download size={11} /> CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("Clear all history? This can't be undone.")) {
+                      onClear();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-slate-400 transition hover:bg-slate-900 hover:text-rose-300"
+                >
+                  <Trash2 size={11} /> clear
+                </button>
+              </>
             ) : null}
             <button
               type="button"

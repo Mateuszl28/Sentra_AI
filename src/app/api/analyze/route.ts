@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { computeAgreement } from "@/lib/agreement";
+import { inspectAllDkim } from "@/lib/dkim";
 import { runHeuristics } from "@/lib/heuristics";
 import { runGeminiAnalysis } from "@/lib/gemini";
-import type { AnalysisResponse } from "@/lib/types";
+import type { AnalysisResponse, DkimInspectionResult } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,11 +37,28 @@ export async function POST(req: Request) {
 
   try {
     const { parsed, findings, heuristicScore } = await runHeuristics(raw);
-    const { analysis, latencyMs, model } = await runGeminiAnalysis(
-      parsed,
-      findings,
-    );
+
+    // Gemini call and DKIM DNS lookups race in parallel.
+    const [gemini, dkimReports] = await Promise.all([
+      runGeminiAnalysis(parsed, findings),
+      inspectAllDkim(raw).catch(() => []),
+    ]);
+    const { analysis, latencyMs, model } = gemini;
     const agreement = computeAgreement(heuristicScore, analysis);
+
+    const dkim: DkimInspectionResult[] = dkimReports.map((r) => ({
+      signingDomain: r.signature.signingDomain,
+      selector: r.signature.selector,
+      algorithm: r.signature.algorithm,
+      canonicalization: r.signature.canonicalization,
+      headersSigned: r.signature.headersSigned,
+      keyStatus: r.keyStatus,
+      publicKeyAlgorithm: r.publicKeyAlgorithm,
+      publicKeySnippet: r.publicKey
+        ? r.publicKey.slice(0, 24) + "…"
+        : null,
+      notes: r.notes,
+    }));
 
     const response: AnalysisResponse = {
       parsed: {
@@ -55,6 +73,7 @@ export async function POST(req: Request) {
         linkCount: parsed.links.length,
         attachmentCount: parsed.attachments.length,
         receivedChain: parsed.receivedChain,
+        dkim,
       },
       heuristicFindings: findings,
       heuristicScore,
