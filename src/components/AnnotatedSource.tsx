@@ -85,7 +85,7 @@ export function AnnotatedSource({
   return (
     <pre
       ref={containerRef}
-      className="max-h-[420px] overflow-auto scrollbar-thin whitespace-pre-wrap break-words rounded-2xl border border-slate-800 bg-slate-950/70 p-4 font-mono text-[11.5px] leading-[1.55] text-slate-300"
+      className="max-h-[420px] overflow-auto scrollbar-thin whitespace-pre-wrap break-words rounded-xl border hairline bg-[rgba(2,6,23,0.65)] p-4 font-mono text-[11.5px] leading-[1.6] text-slate-200"
     >
       {segments.map((seg, i) =>
         seg.annotation ? (

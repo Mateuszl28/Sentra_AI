@@ -204,7 +204,7 @@ export function ResultView({
 
       <FollowUpChat data={data} rawEmail={rawEmail} />
 
-      <details className="group rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <details className="group surface p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-slate-300">
           <span className="inline-flex items-center gap-2">
             <Mail size={14} /> Deterministic heuristics (
@@ -226,7 +226,7 @@ export function ResultView({
                 key={f.id}
                 type="button"
                 onClick={() => f.evidence && setFocusedFlagId(f.id)}
-                className={`text-left rounded-lg border border-slate-800 bg-slate-950/50 p-3 transition-colors ${
+                className={`text-left surface-flat p-3 transition-colors ${
                   f.evidence
                     ? "cursor-pointer hover:border-slate-700 hover:bg-slate-900/60"
                     : "cursor-default"

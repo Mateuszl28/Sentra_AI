@@ -195,7 +195,7 @@ function SlotEditor({
   onClear: () => void;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-1.5">
+    <div className="surface-elev p-1.5">
       <div className="flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] text-slate-400">
         <span className="inline-flex items-center gap-2 font-mono tracking-tight">
           <span
@@ -238,7 +238,7 @@ function SlotEditor({
 function ResultColumn({ slot, data }: { slot: Slot; data: AnalysisResponse }) {
   const { analysis, parsed } = data;
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="surface-elev p-5">
       <div className="flex items-center gap-3">
         <span
           className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${
@@ -341,7 +341,7 @@ function computeDiff(a: AnalysisResponse, b: AnalysisResponse): DiffShape {
 
 function DiffPanel({ diff }: { diff: DiffShape }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="surface-elev p-5">
       <div className="flex flex-wrap items-center gap-3">
         <ScanSearch size={16} className="text-fuchsia-300" />
         <h3 className="text-sm font-semibold text-slate-100">Diff</h3>

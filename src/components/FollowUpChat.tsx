@@ -155,7 +155,7 @@ export function FollowUpChat({
   const hasConversation = messages.length > 0;
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="surface p-5">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <MessageCircle size={16} className="text-cyan-400" />
         <h3 className="text-sm font-semibold tracking-tight text-slate-100">

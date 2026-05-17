@@ -168,11 +168,11 @@ export function UrlInspector({
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-1.5 shadow-[0_0_60px_-20px_rgba(56,189,248,0.15)]">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] text-slate-400">
-          <span className="inline-flex items-center gap-1.5">
+      <div className="surface-elev p-1.5">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2 text-[11px] text-muted">
+          <span className="inline-flex items-center gap-2">
             <Link2 size={12} className="text-sky-300" />
-            <span className="font-mono tracking-tight">
+            <span className="font-mono uppercase tracking-[0.18em]">
               paste a single URL or domain
             </span>
           </span>
@@ -184,7 +184,7 @@ export function UrlInspector({
                 setResult(null);
                 setError(null);
               }}
-              className="rounded-md px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
+              className="rounded-md px-1.5 py-0.5 text-[11px] text-muted transition hover:bg-slate-800/70 hover:text-slate-200"
             >
               clear
             </button>
@@ -200,13 +200,13 @@ export function UrlInspector({
             }}
             spellCheck={false}
             placeholder="https://paypa1-secure-help.com/login/verify"
-            className="block min-w-0 flex-1 rounded-2xl bg-slate-950/60 px-4 py-3 font-mono text-[13px] text-slate-200 placeholder:text-slate-600 outline-none ring-1 ring-inset ring-slate-800/80 focus:ring-sky-500/60"
+            className="block min-w-0 flex-1 rounded-xl bg-[rgba(2,6,23,0.55)] px-4 py-3 font-mono text-[13px] text-slate-200 placeholder:text-slate-600 outline-none ring-1 ring-inset ring-[var(--border)] transition focus:ring-sky-500/60"
           />
           <button
             type="button"
             disabled={!url.trim() || loading}
             onClick={() => inspect()}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_8px_30px_-10px_rgba(56,189,248,0.6)] transition-all hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100"
+            className="btn-primary shrink-0 px-5 py-3"
           >
             {loading ? (
               <>
@@ -221,17 +221,15 @@ export function UrlInspector({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <span className="self-center text-[11px] uppercase tracking-[0.18em] text-slate-500">
-          Try one:
-        </span>
+      <div className="flex flex-wrap gap-1.5">
+        <span className="kicker self-center mr-1">samples</span>
         {URL_EXAMPLES.map((ex) => {
-          const accent =
+          const dot =
             ex.tone === "danger"
-              ? "bg-rose-500/20 text-rose-300"
+              ? "bg-rose-400"
               : ex.tone === "warn"
-                ? "bg-amber-500/20 text-amber-300"
-                : "bg-emerald-500/20 text-emerald-300";
+                ? "bg-amber-400"
+                : "bg-emerald-400";
           const active = url === ex.url;
           return (
             <button
@@ -239,43 +237,39 @@ export function UrlInspector({
               type="button"
               onClick={() => inspect(ex.url)}
               title={ex.pattern}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium ring-1 ring-inset transition ${
                 active
                   ? "bg-sky-500/15 text-sky-200 ring-sky-400/40"
-                  : "bg-slate-900/40 text-slate-300 ring-slate-700 hover:bg-slate-800/70 hover:text-slate-100"
+                  : "border hairline bg-slate-900/40 text-slate-300 hover:bg-slate-800/70 hover:text-slate-100"
               }`}
             >
+              <span className={`h-1 w-1 rounded-full ${dot}`} />
               {ex.label}
-              <span
-                className={`ml-2 rounded-full px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider ${accent}`}
-              >
-                {ex.tone === "danger"
-                  ? "BAD"
-                  : ex.tone === "warn"
-                    ? "WARN"
-                    : "OK"}
-              </span>
             </button>
           );
         })}
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200 animate-fade-up">
           <strong className="font-semibold">Inspection failed:</strong> {error}
         </div>
       ) : null}
 
       {loading && !result ? (
-        <div className="flex items-center justify-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/30 px-4 py-6 text-sm text-slate-300">
+        <div className="surface flex items-center justify-center gap-3 px-4 py-6 text-sm text-slate-300 animate-fade-in">
           <Loader2 size={16} className="animate-spin text-sky-300" />
-          <span className="font-mono text-xs uppercase tracking-[0.18em] text-slate-400">
+          <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted">
             Decomposing host, checking heuristics, asking Gemini…
           </span>
         </div>
       ) : null}
 
-      {result ? <UrlResultView data={result} /> : null}
+      {result ? (
+        <div className="animate-fade-up">
+          <UrlResultView data={result} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -286,8 +280,20 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
   const VerdictIcon = v.Icon;
   return (
     <div className="grid gap-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur">
-        <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+      <div className="surface-elev relative overflow-hidden p-6">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -right-24 h-60 w-60 rounded-full opacity-30 blur-3xl"
+          style={{
+            background:
+              analysis.verdict === "MALICIOUS"
+                ? "radial-gradient(circle, rgba(244,63,94,0.6), transparent 60%)"
+                : analysis.verdict === "SUSPICIOUS"
+                  ? "radial-gradient(circle, rgba(251,191,36,0.5), transparent 60%)"
+                  : "radial-gradient(circle, rgba(52,211,153,0.5), transparent 60%)",
+          }}
+        />
+        <div className="relative flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-6">
             <RiskGauge
               score={analysis.riskScore}
@@ -301,24 +307,48 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
             />
             <div className="space-y-3">
               <span
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-base font-semibold ring-1 ring-inset ${v.ring} ${v.bg} ${v.text}`}
+                className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold uppercase tracking-wider ring-1 ring-inset ${v.ring} ${v.bg} ${v.text}`}
               >
-                <VerdictIcon size={20} strokeWidth={2.4} />
+                <span className="relative inline-flex h-1.5 w-1.5">
+                  <span
+                    className={`absolute inset-0 animate-ping rounded-full opacity-70`}
+                    style={{
+                      backgroundColor:
+                        analysis.verdict === "MALICIOUS"
+                          ? "#fb7185"
+                          : analysis.verdict === "SUSPICIOUS"
+                            ? "#fbbf24"
+                            : "#34d399",
+                    }}
+                  />
+                  <span
+                    className="relative inline-flex h-1.5 w-1.5 rounded-full"
+                    style={{
+                      backgroundColor:
+                        analysis.verdict === "MALICIOUS"
+                          ? "#fb7185"
+                          : analysis.verdict === "SUSPICIOUS"
+                            ? "#fbbf24"
+                            : "#34d399",
+                    }}
+                  />
+                </span>
+                <VerdictIcon size={16} strokeWidth={2.4} />
                 {v.label}
               </span>
-              <p className="max-w-xl text-sm leading-relaxed text-slate-300">
+              <p className="max-w-xl text-[15px] leading-relaxed text-slate-200">
                 {analysis.summary}
               </p>
             </div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted">
               <Sparkles size={11} /> {meta.model} · {meta.latencyMs} ms
             </span>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+        <div className="relative mt-6 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
           <Stat label="Host" value={parts.hostname} mono />
           <Stat label="Registrable" value={parts.registrableDomain} mono />
           <Stat
@@ -334,7 +364,7 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
         </div>
 
         {parts.unicodeHostname !== parts.hostname ? (
-          <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-200">
+          <div className="relative mt-3 rounded-xl border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-200">
             <strong>Punycode decoded:</strong>{" "}
             <span className="font-mono">{parts.unicodeHostname}</span>
           </div>
@@ -407,7 +437,7 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
         </p>
       </Panel>
 
-      <details className="group rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+      <details className="group surface p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-slate-300">
           <span className="inline-flex items-center gap-2">
             <Link2 size={14} /> Structural heuristics ({heuristicFindings.length})
@@ -419,14 +449,14 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
         </summary>
         <div className="mt-4 grid gap-2 text-xs">
           {heuristicFindings.length === 0 ? (
-            <span className="text-slate-500">
+            <span className="text-muted">
               No structural checks triggered.
             </span>
           ) : (
             heuristicFindings.map((f) => (
               <div
                 key={f.id}
-                className="rounded-lg border border-slate-800 bg-slate-950/50 p-3"
+                className="surface-flat p-3"
               >
                 <div className="flex items-center gap-2 text-[11px] text-slate-400">
                   <span
@@ -465,8 +495,8 @@ function Stat({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+    <div className="surface-flat p-3">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted">
         {label}
       </div>
       <div
@@ -491,7 +521,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+    <div className="surface p-5">
       <div className="mb-3 flex items-center gap-2">
         {icon}
         <h3 className="text-sm font-semibold tracking-tight text-slate-100">

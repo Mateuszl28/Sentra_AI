@@ -37,7 +37,7 @@ export function Insights({
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-12 text-center">
+      <div className="surface-elev p-12 text-center">
         <BarChart3
           size={36}
           className="mx-auto text-slate-700"
@@ -89,7 +89,7 @@ export function Insights({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="surface-elev p-5">
           <div className="mb-3 flex items-center gap-2">
             <PieChart size={15} className="text-sky-300" />
             <h3 className="text-sm font-semibold text-slate-100">
@@ -114,7 +114,7 @@ export function Insights({
           />
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="surface-elev p-5">
           <div className="mb-3 flex items-center gap-2">
             <BarChart3 size={15} className="text-cyan-300" />
             <h3 className="text-sm font-semibold text-slate-100">
@@ -126,7 +126,7 @@ export function Insights({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="surface-elev p-5">
           <div className="mb-3 flex items-center gap-2">
             <AlertOctagon size={15} className="text-rose-300" />
             <h3 className="text-sm font-semibold text-slate-100">
@@ -177,7 +177,7 @@ export function Insights({
           )}
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="surface-elev p-5">
           <div className="mb-3 flex items-center gap-2">
             <Clock size={15} className="text-indigo-300" />
             <h3 className="text-sm font-semibold text-slate-100">Timeline</h3>
@@ -300,7 +300,7 @@ function KpiCard({
           ? "ring-emerald-500/30 text-emerald-300"
           : "ring-sky-500/30 text-sky-300";
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+    <div className="surface p-4">
       <div className={`inline-flex items-center gap-1.5 ring-1 ring-inset rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${ring}`}>
         {icon}
         {label}

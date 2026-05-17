@@ -180,7 +180,7 @@ export function InboxSimulator({
             : "Phishers had a field day. Run it again.";
     return (
       <div className="grid gap-6">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 text-center">
+        <div className="surface-elev p-8 text-center">
           <Trophy size={36} className="mx-auto text-amber-300" />
           <h2 className="mt-3 text-2xl font-semibold text-slate-100">
             {score.correct}/{score.total} correct · {pct}%
@@ -273,7 +273,7 @@ export function InboxSimulator({
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-1.5">
+        <div className="surface-elev p-1.5">
           <div className="flex items-center gap-2 px-4 pt-3 pb-1.5 text-[11px] text-slate-400">
             <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
@@ -335,7 +335,7 @@ export function InboxSimulator({
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/40">
+      <div className="overflow-hidden surface-elev">
         <ul className="divide-y divide-slate-800">
           {inbox.map((item) => {
             const a = actions[item.id];

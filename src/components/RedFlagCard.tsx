@@ -77,8 +77,8 @@ export function RedFlagCard({
             }
           : undefined
       }
-      className={`group relative overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-inset p-5 transition-shadow ${s.ring} ${
-        clickable ? `cursor-pointer ${s.hoverRing}` : ""
+      className={`surface group relative overflow-hidden ring-1 ring-inset p-5 transition-all duration-200 ${s.ring} ${
+        clickable ? `cursor-pointer ${s.hoverRing} hover:-translate-y-0.5` : ""
       } ${isFocused ? "ring-2 ring-offset-2 ring-offset-slate-950" : ""}`}
     >
       <div className={`absolute left-0 top-0 h-full w-1 ${s.bar}`} />
@@ -90,10 +90,10 @@ export function RedFlagCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-widest text-slate-400">
-              #{index + 1}
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+              {String(index + 1).padStart(2, "0")}
             </span>
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className="text-[15px] font-semibold leading-tight text-slate-50">
               {flag.title}
             </h3>
             <span

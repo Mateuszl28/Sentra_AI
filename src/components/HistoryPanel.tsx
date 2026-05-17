@@ -54,8 +54,8 @@ export function HistoryPanel({
         onClick={onClose}
         className="flex-1 bg-slate-950/70 backdrop-blur-sm"
       />
-      <aside className="flex h-full w-full max-w-md flex-col border-l border-slate-800 bg-slate-950 shadow-2xl">
-        <header className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+      <aside className="flex h-full w-full max-w-md flex-col border-l hairline bg-[rgba(5,8,22,0.95)] shadow-2xl backdrop-blur-md animate-fade-up">
+        <header className="flex items-center justify-between border-b hairline px-5 py-4">
           <div className="inline-flex items-center gap-2">
             <HistoryIcon size={16} className="text-sky-300" />
             <h2 className="text-sm font-semibold text-slate-100">

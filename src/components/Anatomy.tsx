@@ -170,7 +170,7 @@ export function Anatomy({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-1.5">
+      <div className="surface-elev p-1.5">
         <div className="flex items-center justify-between px-4 pt-3 pb-1.5 text-[11px] text-slate-400">
           <span className="inline-flex items-center gap-2 font-mono tracking-tight">
             <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
@@ -239,7 +239,7 @@ export function Anatomy({
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="surface-elev p-5">
             <div
               className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-inset ${CATEGORY_PILL[STEPS[step].category]}`}
             >
