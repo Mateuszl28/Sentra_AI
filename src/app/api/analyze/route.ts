@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { computeAgreement } from "@/lib/agreement";
 import { inspectAllDkim } from "@/lib/dkim";
+import { lookupDmarc } from "@/lib/dmarc";
 import { runHeuristics } from "@/lib/heuristics";
 import { runGeminiAnalysis } from "@/lib/gemini";
-import type { AnalysisResponse, DkimInspectionResult } from "@/lib/types";
+import { lookupSpf } from "@/lib/spf";
+import type {
+  AnalysisResponse,
+  DkimInspectionResult,
+  DmarcSummary,
+  SpfSummary,
+} from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,13 +45,44 @@ export async function POST(req: Request) {
   try {
     const { parsed, findings, heuristicScore } = await runHeuristics(raw);
 
-    // Gemini call and DKIM DNS lookups race in parallel.
-    const [gemini, dkimReports] = await Promise.all([
+    const fromDomain = parsed.fromDomain;
+
+    // Gemini call + every DNS lookup race in parallel.
+    const [gemini, dkimReports, spfPolicy, dmarcPolicy] = await Promise.all([
       runGeminiAnalysis(parsed, findings),
       inspectAllDkim(raw).catch(() => []),
+      fromDomain ? lookupSpf(fromDomain).catch(() => null) : Promise.resolve(null),
+      fromDomain ? lookupDmarc(fromDomain).catch(() => null) : Promise.resolve(null),
     ]);
     const { analysis, latencyMs, model } = gemini;
     const agreement = computeAgreement(heuristicScore, analysis);
+
+    const spf: SpfSummary | null = spfPolicy
+      ? {
+          domain: spfPolicy.domain,
+          found: spfPolicy.found,
+          raw: spfPolicy.raw,
+          allQualifier: spfPolicy.allQualifier,
+          includes: spfPolicy.includes,
+          mechanismCount: spfPolicy.mechanisms.length,
+          notes: spfPolicy.notes,
+        }
+      : null;
+
+    const dmarc: DmarcSummary | null = dmarcPolicy
+      ? {
+          domain: dmarcPolicy.domain,
+          found: dmarcPolicy.found,
+          raw: dmarcPolicy.raw,
+          p: dmarcPolicy.p,
+          sp: dmarcPolicy.sp,
+          pct: dmarcPolicy.pct,
+          adkim: dmarcPolicy.adkim,
+          aspf: dmarcPolicy.aspf,
+          rua: dmarcPolicy.rua,
+          notes: dmarcPolicy.notes,
+        }
+      : null;
 
     const dkim: DkimInspectionResult[] = dkimReports.map((r) => ({
       signingDomain: r.signature.signingDomain,
@@ -74,6 +112,8 @@ export async function POST(req: Request) {
         attachmentCount: parsed.attachments.length,
         receivedChain: parsed.receivedChain,
         dkim,
+        spf,
+        dmarc,
       },
       heuristicFindings: findings,
       heuristicScore,

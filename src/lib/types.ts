@@ -47,6 +47,29 @@ export type DkimInspectionResult = {
   notes: string[];
 };
 
+export type SpfSummary = {
+  domain: string;
+  found: boolean;
+  raw: string | null;
+  allQualifier: "+" | "-" | "~" | "?" | null;
+  includes: string[];
+  mechanismCount: number;
+  notes: string[];
+};
+
+export type DmarcSummary = {
+  domain: string;
+  found: boolean;
+  raw: string | null;
+  p: "none" | "quarantine" | "reject" | null;
+  sp: "none" | "quarantine" | "reject" | null;
+  pct: number | null;
+  adkim: "s" | "r" | null;
+  aspf: "s" | "r" | null;
+  rua: string[];
+  notes: string[];
+};
+
 export type ParsedEmail = {
   raw: string;
   fromHeader: string | null;
@@ -129,6 +152,8 @@ export type AnalysisResponse = {
     attachmentCount: number;
     receivedChain: ReceivedHop[];
     dkim: DkimInspectionResult[];
+    spf: SpfSummary | null;
+    dmarc: DmarcSummary | null;
   };
   heuristicFindings: HeuristicFinding[];
   heuristicScore: number;

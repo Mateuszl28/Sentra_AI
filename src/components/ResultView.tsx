@@ -16,7 +16,7 @@ import { useState } from "react";
 import { buildMarkdownReport } from "@/lib/report";
 import type { AnalysisResponse } from "@/lib/types";
 import { AnnotatedSource } from "./AnnotatedSource";
-import { DkimInspection } from "./DkimInspection";
+import { EmailAuthPanel } from "./EmailAuthPanel";
 import { FollowUpChat } from "./FollowUpChat";
 import { HeaderForensics } from "./HeaderForensics";
 import { HtmlPreview } from "./HtmlPreview";
@@ -157,8 +157,12 @@ export function ResultView({
         <HeaderForensics chain={parsed.receivedChain} />
       ) : null}
 
-      {parsed.dkim && parsed.dkim.length > 0 ? (
-        <DkimInspection reports={parsed.dkim} />
+      {parsed.spf || parsed.dmarc || (parsed.dkim && parsed.dkim.length > 0) ? (
+        <EmailAuthPanel
+          spf={parsed.spf ?? null}
+          dmarc={parsed.dmarc ?? null}
+          dkim={parsed.dkim ?? []}
+        />
       ) : null}
 
       <HtmlPreview rawEmail={rawEmail} />
