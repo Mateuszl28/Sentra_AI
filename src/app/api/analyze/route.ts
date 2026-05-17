@@ -52,6 +52,7 @@ export async function POST(req: Request) {
         authResults: parsed.authResults,
         linkCount: parsed.links.length,
         attachmentCount: parsed.attachments.length,
+        receivedChain: parsed.receivedChain,
       },
       heuristicFindings: findings,
       analysis,

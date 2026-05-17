@@ -340,6 +340,54 @@ Rules:
 
 export type ChatMessage = { role: "user" | "model"; text: string };
 
+const DEFENSE_BRIEF_SYSTEM = `You are Sentra AI's security coach. The user just finished a session where they triaged real-looking phishing in a sandbox. You will see a compact log of what they analyzed (label, verdict, risk score, kind).
+
+Write a SHORT (300-450 word), specific, personalized defense brief in clean Markdown.
+
+Structure exactly:
+1. Heading "Your session at a glance" — a 2-3 sentence honest read of the session (verdict mix, attack patterns that showed up).
+2. Heading "Top 3 patterns you saw" — bulleted list. For each pattern: name it, 1 sentence on how it works, 1 sentence on the tell.
+3. Heading "Tighten up these habits" — 3-4 concrete behaviors the user can adopt this week. Reference their session specifically when possible.
+4. Heading "If you only remember one thing" — a one-line transferable rule.
+
+Rules:
+- Use Markdown ## for headings, - for bullets, **bold** for tells. No emojis. No HTML.
+- Never invent emails or stats that aren't in the log.
+- Be punchy and specific. Avoid corporate filler ("In today's threat landscape…").
+- If the log is empty or too small, say so plainly and suggest analyzing a few examples first — don't fabricate a brief.`;
+
+export async function* streamGeminiDefenseBrief(args: {
+  entries: { label: string; verdict: string; kind: string; riskScore: number }[];
+}): AsyncGenerator<string, void, void> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set.");
+  }
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: MODEL_ID,
+    systemInstruction: DEFENSE_BRIEF_SYSTEM,
+    generationConfig: { temperature: 0.5 },
+  });
+
+  const log = args.entries.length
+    ? args.entries
+        .map(
+          (e, i) =>
+            `${i + 1}. [${e.kind}] "${e.label}" — verdict: ${e.verdict}, risk: ${e.riskScore}/100`,
+        )
+        .join("\n")
+    : "(empty)";
+
+  const prompt = `User's recent analysis log (most recent first):\n\n${log}\n\nWrite the defense brief now.`;
+
+  const result = await model.generateContentStream(prompt);
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    if (text) yield text;
+  }
+}
+
 export async function* streamGeminiChat(args: {
   rawEmail: string;
   analysisSummary: string;

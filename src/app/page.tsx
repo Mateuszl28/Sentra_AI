@@ -24,6 +24,7 @@ import { InboxSimulator } from "@/components/InboxSimulator";
 import { Insights } from "@/components/Insights";
 import { ResultView } from "@/components/ResultView";
 import { MobileTabStrip, Sidebar, type Mode } from "@/components/Sidebar";
+import { useToast } from "@/components/Toast";
 import { Topbar } from "@/components/Topbar";
 import { TrainMode } from "@/components/TrainMode";
 import { UrlInspector } from "@/components/UrlInspector";
@@ -55,6 +56,7 @@ export default function HomePage() {
   const resultRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
   const history = useHistory();
+  const toast = useToast();
 
   useEffect(() => {
     if (!loading) return;
@@ -94,6 +96,21 @@ export default function HomePage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const seen = window.localStorage.getItem("sentra:welcomed");
+    if (seen) return;
+    const timer = window.setTimeout(() => {
+      toast.push({
+        tone: "info",
+        title: "Tip: press ⌘K (or Ctrl+K) anywhere",
+        body: "Quick-switch between modes or jump back into any past analysis.",
+      });
+      window.localStorage.setItem("sentra:welcomed", "1");
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const stats = useMemo(() => {
     const total = history.entries.length;

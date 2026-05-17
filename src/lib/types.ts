@@ -23,6 +23,18 @@ export type ParsedAttachment = {
   riskyExtension: boolean;
 };
 
+export type ReceivedHop = {
+  index: number;
+  raw: string;
+  fromHost: string | null;
+  fromIp: string | null;
+  byHost: string | null;
+  protocol: string | null;
+  date: string | null;
+  timestamp: number | null;
+  gapMs: number | null;
+};
+
 export type ParsedEmail = {
   raw: string;
   fromHeader: string | null;
@@ -44,6 +56,7 @@ export type ParsedEmail = {
   bodyHtml: string | null;
   links: ParsedLink[];
   attachments: ParsedAttachment[];
+  receivedChain: ReceivedHop[];
 };
 
 export type AuthStatus =
@@ -91,6 +104,7 @@ export type AnalysisResponse = {
     authResults: ParsedEmail["authResults"];
     linkCount: number;
     attachmentCount: number;
+    receivedChain: ReceivedHop[];
   };
   heuristicFindings: HeuristicFinding[];
   analysis: LlmAnalysis;

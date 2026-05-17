@@ -20,13 +20,13 @@ Sentra is a **seven-mode workbench** around one core idea: deterministic securit
 
 | Mode | What it does |
 |---|---|
-| **Analyzer** | Paste raw email → full two-layer analysis with annotated source, red flags, recommended actions, and a streaming follow-up chat. |
+| **Analyzer** | Paste raw email → full two-layer analysis with annotated source, red flags, **Received-chain forensics**, recommended actions, and a streaming follow-up chat. |
 | **URL** | Paste a single URL/domain → structural inspection (punycode, lookalike, IP host, suspicious TLD, @-trick, shortener) + LLM verdict, without ever fetching the URL. |
 | **Compare** | Two emails side by side → parallel analysis with a diff panel (Only in A / In both / Only in B) and a score-delta banner. |
 | **Train** | Quiz mode — ten real-pattern emails, three guesses each, score tracker. |
 | **Inbox** | Gmail-like inbox of mixed real/fake mail. Triage every message (report / trash / keep) without clicking, get graded. |
 | **Anatomy** | Step-driven walkthrough of one phishing email, eight stops, animated highlights, plain-English explanations + transferable takeaways. |
-| **Insights** | Verdict donut, risk-score histogram, top risky senders/hosts, click-through timeline — all client-side from your local history. |
+| **Insights** | Verdict donut, risk-score histogram, top risky senders/hosts, click-through timeline — and an **AI Defense Brief** that turns your session into a personalized 1-page security training. |
 
 ## How the verdict is produced
 
@@ -43,12 +43,25 @@ Sentra is a **seven-mode workbench** around one core idea: deterministic securit
    - Risky attachment extensions (`.exe`, `.docm`, `.iso`, `.hta`, …)
 2. **Gemini 2.5 Flash as the analyst.** The model receives the raw email *plus* the heuristic findings, then returns strict JSON: verdict (SAFE / SUSPICIOUS / PHISHING), 0-100 risk score, ranked red flags with plain-English explanations, recommended actions, legitimate signals, and a one-line educational takeaway.
 3. **Follow-up chat.** After the verdict, a streaming Gemini chat session takes over — grounded in the specific email and the analyzer's conclusions. Ask "why is this phishing?", "explain SPF like I'm five", or "what if I already clicked?" — answers come back live.
+4. **Defense Brief.** A meta-LLM call in Insights reads your recent analysis log and writes a personalized 1-page security training in Markdown. Streams in live.
 
 Same pipeline shape — heuristics first, LLM second — powers the URL Inspector with a separate structural-checks layer.
 
 ## Live-typing feedback
 
 While you paste, a tiny regex-only client-side heuristic engine highlights findings as chips below the textarea — **no network call, no LLM** — so the user sees Punycode / @-trick / brand mismatches *before* they even click Analyze. The full pipeline still runs on submit and may upgrade or contradict the preview.
+
+## Header forensics
+
+Every analyzed email is decomposed into its `Received:` chain — origin host, IP, hop count, per-hop protocol, timestamps and time gaps. Sentra flags single-hop deliveries, private-range IPs leaking into the path, and backwards-running timestamps. Rendered as a clean timeline with summary cards.
+
+## PRO UX
+
+- **⌘K command palette** for jumping between modes or recent analyses.
+- **Persistent left sidebar** (Workbench / Learn groups) and sticky topbar with breadcrumb-style mode header.
+- **Toast notifications** for copy / share / brief actions.
+- **Branded OG image** at `/opengraph-image` so shared demo URLs preview cleanly on Slack / X / LinkedIn.
+- **Custom 404** matching the app shell.
 
 ## Session history & share-by-URL
 

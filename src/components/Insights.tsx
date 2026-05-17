@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import type { HistoryEntry } from "@/lib/useHistory";
+import { DefenseBrief } from "./DefenseBrief";
 
 type Verdict = "SAFE" | "SUSPICIOUS" | "PHISHING" | "MALICIOUS";
 
@@ -56,6 +57,8 @@ export function Insights({
 
   return (
     <div className="grid gap-6">
+      <DefenseBrief entries={entries} />
+
       <div className="grid gap-4 sm:grid-cols-4">
         <KpiCard
           label="Total analyses"

@@ -4,6 +4,7 @@ import { Check, Share2 } from "lucide-react";
 import { useState } from "react";
 import { encodeShare } from "@/lib/share";
 import type { AnalysisResponse } from "@/lib/types";
+import { useToast } from "./Toast";
 
 export function ShareButton({
   data,
@@ -14,6 +15,7 @@ export function ShareButton({
 }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   async function share() {
     setError(null);
@@ -22,9 +24,16 @@ export function ShareButton({
       const url = `${window.location.origin}${window.location.pathname}#share=${hash}`;
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      toast.push({
+        tone: "success",
+        title: "Share link copied",
+        body: "Anyone with this URL sees the same verdict — no API call needed.",
+      });
       window.setTimeout(() => setCopied(false), 2400);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Share failed.");
+      const msg = e instanceof Error ? e.message : "Share failed.";
+      setError(msg);
+      toast.push({ tone: "error", title: "Share failed", body: msg });
     }
   }
 

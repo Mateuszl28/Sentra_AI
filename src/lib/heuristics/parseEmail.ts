@@ -4,6 +4,7 @@ import type {
   ParsedAttachment,
   ParsedEmail,
   ParsedLink,
+  ReceivedHop,
 } from "@/lib/types";
 
 const RISKY_EXTENSIONS = new Set([
@@ -154,6 +155,51 @@ function hostHints(anchor: string, actualHost: string): boolean {
   return true;
 }
 
+function parseReceivedChain(
+  headers: { key?: string; value?: unknown }[] | undefined,
+): ReceivedHop[] {
+  if (!headers) return [];
+  const rawHops: string[] = [];
+  for (const h of headers) {
+    if ((h.key || "").toLowerCase() !== "received") continue;
+    if (typeof h.value === "string") rawHops.push(h.value);
+  }
+  // Topmost Received: header is the most-recent hop. Reverse so index 0 = origin.
+  const ordered = [...rawHops].reverse();
+  const hops: ReceivedHop[] = ordered.map((raw, i) => {
+    const fromMatch = raw.match(/from\s+([^\s(]+)(?:\s*\(([^)]+)\))?/i);
+    const byMatch = raw.match(/\bby\s+([^\s(]+)/i);
+    const withMatch = raw.match(/\bwith\s+([A-Z0-9.+_-]+)/i);
+    const ipMatch =
+      raw.match(/\[\s*((?:\d{1,3}\.){3}\d{1,3})\s*\]/) ??
+      raw.match(/\(\s*((?:\d{1,3}\.){3}\d{1,3})\s*\)/) ??
+      raw.match(/\(([0-9a-fA-F:]{2,})\)/);
+    const semiIdx = raw.lastIndexOf(";");
+    const dateStr = semiIdx >= 0 ? raw.slice(semiIdx + 1).trim() : null;
+    const ts = dateStr ? Date.parse(dateStr) : NaN;
+
+    return {
+      index: i,
+      raw: raw.replace(/\s+/g, " ").trim(),
+      fromHost: fromMatch ? fromMatch[1] : null,
+      fromIp: ipMatch ? ipMatch[1] : null,
+      byHost: byMatch ? byMatch[1] : null,
+      protocol: withMatch ? withMatch[1] : null,
+      date: dateStr,
+      timestamp: Number.isFinite(ts) ? ts : null,
+      gapMs: null,
+    };
+  });
+
+  for (let i = 1; i < hops.length; i++) {
+    const prev = hops[i - 1].timestamp;
+    const cur = hops[i].timestamp;
+    if (prev !== null && cur !== null) hops[i].gapMs = cur - prev;
+  }
+
+  return hops;
+}
+
 export async function parseEmail(raw: string): Promise<ParsedEmail> {
   const parser = new PostalMime();
   const email = await parser.parse(raw);
@@ -229,6 +275,7 @@ export async function parseEmail(raw: string): Promise<ParsedEmail> {
     bodyHtml,
     links: Array.from(linkMap.values()),
     attachments,
+    receivedChain: parseReceivedChain(email.headers),
   };
 }
 

@@ -100,6 +100,71 @@ export function analyzeHeaders(p: ParsedEmail): HeuristicFinding[] {
     }
   }
 
+  const chain = p.receivedChain;
+  if (chain.length > 0) {
+    const origin = chain[0];
+    if (chain.length === 1) {
+      findings.push({
+        id: "received-single-hop",
+        category: "header",
+        severity: "medium",
+        title: "Email passed through only one relay",
+        detail:
+          "Legitimate mail usually traverses 2-5 servers (sender's outbound → MX → spam filter → inbox). A single Received header is unusual and often seen with hand-crafted phishing tools.",
+        evidence: origin.raw,
+      });
+    }
+
+    const privateIp = chain.find(
+      (h) =>
+        h.fromIp &&
+        (h.fromIp.startsWith("10.") ||
+          h.fromIp.startsWith("192.168.") ||
+          /^172\.(1[6-9]|2\d|3[01])\./.test(h.fromIp)),
+    );
+    if (privateIp && privateIp.fromIp) {
+      findings.push({
+        id: "received-private-ip",
+        category: "header",
+        severity: "medium",
+        title: "Received chain exposes a private/internal IP",
+        detail: `Hop ${privateIp.index} reports a private-range IP (${privateIp.fromIp}). Usually means the message was injected by a host that wasn't properly NATted — common with home-grown spam infrastructure.`,
+        evidence: privateIp.raw,
+      });
+    }
+
+    const bigGap = chain.find(
+      (h) => typeof h.gapMs === "number" && h.gapMs > 60 * 60 * 1000,
+    );
+    if (bigGap && bigGap.gapMs !== null) {
+      const hours = Math.round(bigGap.gapMs / (60 * 60 * 1000));
+      findings.push({
+        id: "received-big-gap",
+        category: "header",
+        severity: "low",
+        title: `Unusual ${hours}h delay between SMTP relays`,
+        detail:
+          "Large gaps between adjacent Received hops can indicate the email was held in a queue, replayed, or had timestamps manipulated.",
+        evidence: bigGap.raw,
+      });
+    }
+
+    const negativeGap = chain.find(
+      (h) => typeof h.gapMs === "number" && h.gapMs < -2 * 60 * 1000,
+    );
+    if (negativeGap) {
+      findings.push({
+        id: "received-time-travel",
+        category: "header",
+        severity: "medium",
+        title: "Received chain timestamps go backwards",
+        detail:
+          "A later relay logged an earlier timestamp than the previous hop. Either clocks are badly skewed or someone forged the chain.",
+        evidence: negativeGap.raw,
+      });
+    }
+  }
+
   return findings;
 }
 

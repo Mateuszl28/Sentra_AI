@@ -16,9 +16,11 @@ import { buildMarkdownReport } from "@/lib/report";
 import type { AnalysisResponse } from "@/lib/types";
 import { AnnotatedSource } from "./AnnotatedSource";
 import { FollowUpChat } from "./FollowUpChat";
+import { HeaderForensics } from "./HeaderForensics";
 import { RedFlagCard } from "./RedFlagCard";
 import { RiskGauge } from "./RiskGauge";
 import { ShareButton } from "./ShareButton";
+import { useToast } from "./Toast";
 import { VerdictBadge } from "./VerdictBadge";
 
 export function ResultView({
@@ -31,14 +33,20 @@ export function ResultView({
   const { analysis, parsed, meta, heuristicFindings } = data;
   const [focusedFlagId, setFocusedFlagId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const toast = useToast();
 
   async function copyReport() {
     try {
       await navigator.clipboard.writeText(buildMarkdownReport(data));
       setCopied(true);
+      toast.push({
+        tone: "success",
+        title: "Markdown report copied",
+        body: "Paste it into a ticket, doc, or chat.",
+      });
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      /* clipboard unavailable */
+      toast.push({ tone: "error", title: "Clipboard unavailable" });
     }
   }
 
@@ -134,6 +142,10 @@ export function ResultView({
             ))}
           </div>
         </section>
+      ) : null}
+
+      {parsed.receivedChain && parsed.receivedChain.length > 0 ? (
+        <HeaderForensics chain={parsed.receivedChain} />
       ) : null}
 
       <section className="space-y-3">
