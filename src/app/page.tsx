@@ -2,6 +2,8 @@
 
 import {
   ArrowDown,
+  BarChart3,
+  BookOpen,
   Github,
   Globe,
   GraduationCap,
@@ -10,16 +12,23 @@ import {
   Loader2,
   ScanSearch,
   ShieldAlert,
+  SplitSquareHorizontal,
+  Share2,
   History as HistoryIcon,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Anatomy } from "@/components/Anatomy";
+import { CompareMode } from "@/components/CompareMode";
 import { EmailInput } from "@/components/EmailInput";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { InboxSimulator } from "@/components/InboxSimulator";
+import { Insights } from "@/components/Insights";
 import { Logo } from "@/components/Logo";
 import { ResultView } from "@/components/ResultView";
 import { TrainMode } from "@/components/TrainMode";
 import { UrlInspector } from "@/components/UrlInspector";
+import { clearShareFromHash, readShareFromHash } from "@/lib/share";
 import type { AnalysisResponse } from "@/lib/types";
 import { useHistory } from "@/lib/useHistory";
 
@@ -31,7 +40,14 @@ const LOADING_STAGES = [
   "Asking Gemini for the verdict…",
 ];
 
-type Mode = "analyze" | "url" | "train" | "inbox";
+type Mode =
+  | "analyze"
+  | "url"
+  | "compare"
+  | "train"
+  | "inbox"
+  | "anatomy"
+  | "insights";
 
 export default function HomePage() {
   const [mode, setMode] = useState<Mode>("analyze");
@@ -42,6 +58,9 @@ export default function HomePage() {
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [stage, setStage] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [shareBanner, setShareBanner] = useState<{
+    sharedAt: number;
+  } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
   const history = useHistory();
@@ -61,6 +80,18 @@ export default function HomePage() {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [result]);
+
+  useEffect(() => {
+    const shared = readShareFromHash();
+    if (!shared) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setMode("analyze");
+    setRaw(shared.rawEmail);
+    setResult(shared.data);
+    setShareBanner({ sharedAt: shared.sharedAt });
+    /* eslint-enable react-hooks/set-state-in-effect */
+    clearShareFromHash();
+  }, []);
 
   const stats = useMemo(() => {
     const total = history.entries.length;
@@ -135,6 +166,12 @@ export default function HomePage() {
             label="URL"
           />
           <ModeButton
+            active={mode === "compare"}
+            onClick={() => setMode("compare")}
+            icon={<SplitSquareHorizontal size={13} />}
+            label="Compare"
+          />
+          <ModeButton
             active={mode === "train"}
             onClick={() => setMode("train")}
             icon={<GraduationCap size={13} />}
@@ -145,6 +182,18 @@ export default function HomePage() {
             onClick={() => setMode("inbox")}
             icon={<Inbox size={13} />}
             label="Inbox"
+          />
+          <ModeButton
+            active={mode === "anatomy"}
+            onClick={() => setMode("anatomy")}
+            icon={<BookOpen size={13} />}
+            label="Anatomy"
+          />
+          <ModeButton
+            active={mode === "insights"}
+            onClick={() => setMode("insights")}
+            icon={<BarChart3 size={13} />}
+            label="Insights"
           />
         </div>
         <div className="order-2 flex items-center gap-2 text-xs text-slate-400 sm:order-3">
@@ -180,6 +229,28 @@ export default function HomePage() {
           </a>
         </div>
       </header>
+
+      {shareBanner ? (
+        <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+          <span className="inline-flex items-center gap-2">
+            <Share2 size={14} className="text-sky-300" />
+            <span>
+              Viewing a shared verdict from{" "}
+              {new Date(shareBanner.sharedAt).toLocaleString()}. Click{" "}
+              <strong>Analyze email</strong> below to re-run on the latest
+              model, or paste your own to start fresh.
+            </span>
+          </span>
+          <button
+            type="button"
+            aria-label="Dismiss shared verdict banner"
+            onClick={() => setShareBanner(null)}
+            className="rounded-md p-1 text-sky-200 hover:bg-sky-500/10"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ) : null}
 
       {mode === "analyze" ? (
         <>
@@ -331,6 +402,79 @@ export default function HomePage() {
           </section>
           <section className="mt-10">
             <InboxSimulator onSendToAnalyzer={sendToAnalyzer} />
+          </section>
+        </>
+      ) : null}
+
+      {mode === "compare" ? (
+        <>
+          <section className="mt-12 grid gap-4 text-center sm:mt-16">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-fuchsia-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-fuchsia-300 ring-1 ring-inset ring-fuchsia-500/30">
+              <SplitSquareHorizontal size={12} /> Compare
+            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+              Two emails, side by side.{" "}
+              <span className="bg-gradient-to-r from-fuchsia-300 via-sky-200 to-cyan-200 bg-clip-text text-transparent">
+                Spot the difference.
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-sm leading-relaxed text-slate-300 sm:text-base">
+              Paste the suspect on one side, the legit baseline on the other.
+              Sentra analyzes both and shows where they diverge.
+            </p>
+          </section>
+          <section className="mt-10">
+            <CompareMode />
+          </section>
+        </>
+      ) : null}
+
+      {mode === "anatomy" ? (
+        <>
+          <section className="mt-12 grid gap-4 text-center sm:mt-16">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-300 ring-1 ring-inset ring-amber-500/30">
+              <BookOpen size={12} /> Anatomy of a phishing email
+            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+              One email, eight tricks.{" "}
+              <span className="bg-gradient-to-r from-amber-300 via-rose-200 to-fuchsia-200 bg-clip-text text-transparent">
+                Watch them light up.
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-sm leading-relaxed text-slate-300 sm:text-base">
+              A guided walkthrough of a real-looking PayPal phish. Step through
+              each red flag — header by header, link by link.
+            </p>
+          </section>
+          <section className="mt-10">
+            <Anatomy onSendToAnalyzer={sendToAnalyzer} />
+          </section>
+        </>
+      ) : null}
+
+      {mode === "insights" ? (
+        <>
+          <section className="mt-12 grid gap-4 text-center sm:mt-16">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
+              <BarChart3 size={12} /> Insights
+            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+              Your session, charted.{" "}
+              <span className="bg-gradient-to-r from-indigo-300 via-sky-200 to-cyan-200 bg-clip-text text-transparent">
+                What you saw, what slipped.
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-sm leading-relaxed text-slate-300 sm:text-base">
+              All charts come from your local history. Nothing leaves this
+              browser.
+            </p>
+          </section>
+          <section className="mt-10">
+            <Insights
+              entries={history.entries}
+              onOpenEmail={sendToAnalyzer}
+              onOpenUrl={openHistoryUrl}
+            />
           </section>
         </>
       ) : null}
