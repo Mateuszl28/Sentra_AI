@@ -1,10 +1,19 @@
 "use client";
 
-import { ArrowDown, Github, Globe, Loader2, ShieldAlert } from "lucide-react";
+import {
+  ArrowDown,
+  Github,
+  Globe,
+  GraduationCap,
+  Loader2,
+  ScanSearch,
+  ShieldAlert,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { EmailInput } from "@/components/EmailInput";
 import { Logo } from "@/components/Logo";
 import { ResultView } from "@/components/ResultView";
+import { TrainMode } from "@/components/TrainMode";
 import type { AnalysisResponse } from "@/lib/types";
 
 const LOADING_STAGES = [
@@ -15,13 +24,17 @@ const LOADING_STAGES = [
   "Asking Gemini for the verdict…",
 ];
 
+type Mode = "analyze" | "train";
+
 export default function HomePage() {
+  const [mode, setMode] = useState<Mode>("analyze");
   const [raw, setRaw] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [stage, setStage] = useState(0);
   const resultRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading) {
@@ -60,16 +73,40 @@ export default function HomePage() {
     }
   }
 
+  function sendToAnalyzer(rawEmail: string) {
+    setRaw(rawEmail);
+    setMode("analyze");
+    setResult(null);
+    setError(null);
+    requestAnimationFrame(() => {
+      inputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-5 pb-24 pt-6 sm:px-8">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <Logo />
-        <div className="flex items-center gap-3 text-xs text-slate-400">
+        <div className="order-3 flex items-center gap-1 rounded-full bg-slate-900/60 p-1 ring-1 ring-inset ring-slate-800 sm:order-2">
+          <ModeButton
+            active={mode === "analyze"}
+            onClick={() => setMode("analyze")}
+            icon={<ScanSearch size={13} />}
+            label="Analyzer"
+          />
+          <ModeButton
+            active={mode === "train"}
+            onClick={() => setMode("train")}
+            icon={<GraduationCap size={13} />}
+            label="Train mode"
+          />
+        </div>
+        <div className="order-2 flex items-center gap-2 text-xs text-slate-400 sm:order-3">
           <a
             href="https://hack-the-tech.devpost.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden items-center gap-1.5 rounded-full bg-slate-900/60 px-3 py-1.5 ring-1 ring-inset ring-slate-700 transition hover:text-slate-100 sm:inline-flex"
+            className="hidden items-center gap-1.5 rounded-full bg-slate-900/60 px-3 py-1.5 ring-1 ring-inset ring-slate-700 transition hover:text-slate-100 md:inline-flex"
           >
             <Globe size={12} /> Hack the Tech 2026
           </a>
@@ -84,79 +121,106 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="mt-16 grid gap-6 text-center sm:mt-24">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-rose-300 ring-1 ring-inset ring-rose-500/30">
-          <ShieldAlert size={12} /> 90% of breaches start with a phishing email
-        </div>
-        <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          Stop guessing if an email is real.{" "}
-          <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
-            Sentra reads it for you.
-          </span>
-        </h1>
-        <p className="mx-auto max-w-2xl text-balance text-base leading-relaxed text-slate-300 sm:text-lg">
-          Paste a suspicious email below. Sentra runs deterministic header,
-          sender, link and content checks, then hands the evidence to{" "}
-          <strong className="text-slate-100">Gemini 2.0 Flash</strong> for a
-          human-readable verdict — in seconds.
-        </p>
-      </section>
-
-      <section className="mt-12 grid gap-4">
-        <EmailInput
-          value={raw}
-          setValue={setRaw}
-          loading={loading}
-          onAnalyze={analyze}
-          onReset={() => {
-            setResult(null);
-            setError(null);
-          }}
-        />
-        {error ? (
-          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-            <strong className="font-semibold">Analysis failed:</strong> {error}
-          </div>
-        ) : null}
-        {loading ? (
-          <div className="flex items-center justify-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/30 px-4 py-6 text-sm text-slate-300">
-            <Loader2 size={16} className="animate-spin text-sky-300" />
-            <span className="font-mono text-xs uppercase tracking-[0.18em] text-slate-400">
-              {LOADING_STAGES[stage]}
-            </span>
-          </div>
-        ) : null}
-      </section>
-
-      <div ref={resultRef} className="mt-12 scroll-mt-6">
-        {result ? (
-          <ResultView data={result} rawEmail={raw} />
-        ) : !loading && !error ? (
-          <section className="mt-4 grid gap-3 text-center">
-            <div className="mx-auto inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-slate-500">
-              <ArrowDown size={11} /> Or pick an example above
+      {mode === "analyze" ? (
+        <>
+          <section className="mt-16 grid gap-6 text-center sm:mt-24">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-rose-300 ring-1 ring-inset ring-rose-500/30">
+              <ShieldAlert size={12} /> 90% of breaches start with a phishing
+              email
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {FEATURES.map((f) => (
-                <div
-                  key={f.title}
-                  className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5 text-left"
-                >
-                  <div className="text-xs uppercase tracking-[0.18em] text-sky-300">
-                    {f.kicker}
-                  </div>
-                  <h3 className="mt-1 text-sm font-semibold text-slate-100">
-                    {f.title}
-                  </h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-                    {f.body}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-5xl">
+              Stop guessing if an email is real.{" "}
+              <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
+                Sentra reads it for you.
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-base leading-relaxed text-slate-300 sm:text-lg">
+              Paste a suspicious email below. Sentra runs deterministic header,
+              sender, link and content checks, then hands the evidence to{" "}
+              <strong className="text-slate-100">Gemini 2.5 Flash</strong> for a
+              human-readable verdict — in seconds.
+            </p>
           </section>
-        ) : null}
-      </div>
+
+          <section ref={inputRef} className="mt-12 grid gap-4 scroll-mt-6">
+            <EmailInput
+              value={raw}
+              setValue={setRaw}
+              loading={loading}
+              onAnalyze={analyze}
+              onReset={() => {
+                setResult(null);
+                setError(null);
+              }}
+            />
+            {error ? (
+              <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                <strong className="font-semibold">Analysis failed:</strong>{" "}
+                {error}
+              </div>
+            ) : null}
+            {loading ? (
+              <div className="flex items-center justify-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/30 px-4 py-6 text-sm text-slate-300">
+                <Loader2 size={16} className="animate-spin text-sky-300" />
+                <span className="font-mono text-xs uppercase tracking-[0.18em] text-slate-400">
+                  {LOADING_STAGES[stage]}
+                </span>
+              </div>
+            ) : null}
+          </section>
+
+          <div ref={resultRef} className="mt-12 scroll-mt-6">
+            {result ? (
+              <ResultView data={result} rawEmail={raw} />
+            ) : !loading && !error ? (
+              <section className="mt-4 grid gap-3 text-center">
+                <div className="mx-auto inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-slate-500">
+                  <ArrowDown size={11} /> Or pick an example above
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {FEATURES.map((f) => (
+                    <div
+                      key={f.title}
+                      className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5 text-left"
+                    >
+                      <div className="text-xs uppercase tracking-[0.18em] text-sky-300">
+                        {f.kicker}
+                      </div>
+                      <h3 className="mt-1 text-sm font-semibold text-slate-100">
+                        {f.title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                        {f.body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          <section className="mt-12 grid gap-4 text-center sm:mt-16">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-cyan-300 ring-1 ring-inset ring-cyan-500/30">
+              <GraduationCap size={12} /> Train your eye
+            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+              Five emails. Three guesses each.{" "}
+              <span className="bg-gradient-to-r from-cyan-300 via-sky-200 to-emerald-200 bg-clip-text text-transparent">
+                How sharp is your inbox sense?
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-sm leading-relaxed text-slate-300 sm:text-base">
+              No AI yet — just you and the raw email. After each guess, see the
+              answer and (if you want) the full Sentra analysis.
+            </p>
+          </section>
+          <section className="mt-10">
+            <TrainMode onSendToAnalyzer={sendToAnalyzer} />
+          </section>
+        </>
+      )}
 
       <footer className="mt-auto pt-24 text-center text-[11px] text-slate-500">
         <p>
@@ -178,6 +242,33 @@ export default function HomePage() {
   );
 }
 
+function ModeButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+        active
+          ? "bg-gradient-to-r from-sky-400 to-cyan-400 text-slate-950 shadow"
+          : "text-slate-300 hover:text-slate-100"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
 const FEATURES = [
   {
     kicker: "Layer 1",
@@ -187,7 +278,7 @@ const FEATURES = [
   {
     kicker: "Layer 2",
     title: "LLM as analyst",
-    body: "Gemini 2.0 Flash sees raw email + heuristic findings, then explains what's wrong in plain English — and what's not.",
+    body: "Gemini 2.5 Flash sees raw email + heuristic findings, then explains what's wrong in plain English — and what's not.",
   },
   {
     kicker: "Layer 3",
