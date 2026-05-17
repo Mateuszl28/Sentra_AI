@@ -191,6 +191,18 @@ body::after {
     letter-spacing: 0.18em;
     color: var(--muted);
   }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    background: rgba(15, 23, 42, 0.6);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--foreground);
+  }
 }
 
 /* Scrollbars */

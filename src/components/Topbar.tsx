@@ -15,12 +15,14 @@ export function Topbar({
   phishyTotal,
   onOpenHistory,
   onOpenCommandPalette,
+  onOpenShortcuts,
 }: {
   mode: Mode;
   historyTotal: number;
   phishyTotal: number;
   onOpenHistory: () => void;
   onOpenCommandPalette: () => void;
+  onOpenShortcuts: () => void;
 }) {
   const active = MODES.find((m) => m.id === mode);
   const ActiveIcon = active?.icon ?? ShieldCheck;
@@ -48,6 +50,14 @@ export function Topbar({
         >
           <Keyboard size={11} />
           <span className="font-mono">⌘K</span>
+        </button>
+        <button
+          type="button"
+          onClick={onOpenShortcuts}
+          title="Keyboard shortcuts (?)"
+          className="hidden md:inline-flex items-center justify-center rounded-md border hairline bg-slate-950/40 px-2 py-1 text-[11px] text-muted transition hover:bg-slate-900/70 hover:text-slate-200"
+        >
+          <span className="font-mono">?</span>
         </button>
         <button
           type="button"

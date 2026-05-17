@@ -151,6 +151,17 @@ export type UrlLlmAnalysis = {
   educationalTakeaway: string;
 };
 
+export type DomainInfoSummary = {
+  domain: string;
+  registered: string | null;
+  lastChanged: string | null;
+  expires: string | null;
+  registrar: string | null;
+  status: string[];
+  ageDays: number | null;
+  unknown: boolean;
+};
+
 export type UrlInspectionResponse = {
   parts: UrlParts;
   heuristicFindings: UrlFinding[];
@@ -160,4 +171,5 @@ export type UrlInspectionResponse = {
     model: string;
     latencyMs: number;
   };
+  domainInfo: DomainInfoSummary | null;
 };

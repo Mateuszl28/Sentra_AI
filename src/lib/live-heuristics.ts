@@ -74,6 +74,10 @@ const FREE_MAIL = new Set([
 
 const BRANDS = [
   { name: "PayPal", domains: ["paypal.com", "paypal.co.uk"] },
+  { name: "Stripe", domains: ["stripe.com"] },
+  { name: "Revolut", domains: ["revolut.com"] },
+  { name: "Coinbase", domains: ["coinbase.com"] },
+  { name: "Binance", domains: ["binance.com"] },
   {
     name: "Microsoft",
     domains: [
@@ -88,9 +92,16 @@ const BRANDS = [
   { name: "Amazon", domains: ["amazon.com", "amazon.co.uk"] },
   { name: "Google", domains: ["google.com", "gmail.com"] },
   { name: "LinkedIn", domains: ["linkedin.com"] },
+  { name: "Spotify", domains: ["spotify.com"] },
   { name: "DHL", domains: ["dhl.com", "dhl.de"] },
   { name: "GitHub", domains: ["github.com"] },
-  { name: "Stripe", domains: ["stripe.com"] },
+  { name: "Slack", domains: ["slack.com"] },
+  { name: "Zoom", domains: ["zoom.us", "zoom.com"] },
+  { name: "Notion", domains: ["notion.so", "notion.com"] },
+  { name: "Figma", domains: ["figma.com"] },
+  { name: "Okta", domains: ["okta.com"] },
+  { name: "Dropbox", domains: ["dropbox.com"] },
+  { name: "Atlassian", domains: ["atlassian.com", "atlassian.net"] },
 ];
 
 const URGENCY_PATTERNS = [

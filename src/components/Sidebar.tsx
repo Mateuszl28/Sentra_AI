@@ -3,6 +3,7 @@
 import {
   BarChart3,
   BookOpen,
+  BookmarkPlus,
   GraduationCap,
   Inbox,
   Keyboard,
@@ -10,6 +11,7 @@ import {
   ScanSearch,
   SplitSquareHorizontal,
 } from "lucide-react";
+import Link from "next/link";
 import { Logo } from "./Logo";
 
 export type Mode =
@@ -93,7 +95,17 @@ export function Sidebar({
         ))}
       </NavGroup>
 
-      <div className="mt-auto px-2 pb-1">
+      <div className="mt-auto grid gap-2 px-2 pb-1">
+        <Link
+          href="/bookmarklet"
+          className="inline-flex items-center gap-2 rounded-lg border hairline bg-slate-950/40 px-3 py-2 text-[11px] text-slate-300 transition hover:bg-slate-900/70 hover:text-slate-100"
+        >
+          <BookmarkPlus size={12} className="text-sky-300" />
+          <span>
+            <span className="block font-medium leading-tight">Get bookmarklet</span>
+            <span className="text-[10px] text-muted">one-click from any inbox</span>
+          </span>
+        </Link>
         <div className="rounded-lg border hairline bg-slate-950/40 px-3 py-2 text-[10px] text-muted">
           <div className="flex items-center gap-1.5">
             <span className="relative inline-flex h-1.5 w-1.5">

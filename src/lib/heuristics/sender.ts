@@ -1,7 +1,18 @@
 import type { HeuristicFinding, ParsedEmail } from "@/lib/types";
 
 const KNOWN_BRANDS: { name: string; legitDomains: string[] }[] = [
+  // --- Finance / payments ---
   { name: "PayPal", legitDomains: ["paypal.com", "paypal.co.uk"] },
+  { name: "Stripe", legitDomains: ["stripe.com"] },
+  { name: "Chase", legitDomains: ["chase.com"] },
+  { name: "Bank of America", legitDomains: ["bankofamerica.com"] },
+  { name: "Wells Fargo", legitDomains: ["wellsfargo.com"] },
+  { name: "Revolut", legitDomains: ["revolut.com"] },
+  { name: "Wise", legitDomains: ["wise.com", "transferwise.com"] },
+  { name: "Coinbase", legitDomains: ["coinbase.com"] },
+  { name: "Binance", legitDomains: ["binance.com"] },
+  { name: "Kraken", legitDomains: ["kraken.com"] },
+  // --- Big tech consumer ---
   {
     name: "Microsoft",
     legitDomains: [
@@ -11,6 +22,7 @@ const KNOWN_BRANDS: { name: string; legitDomains: string[] }[] = [
       "office365.com",
       "live.com",
       "azure.com",
+      "msft.net",
     ],
   },
   { name: "Apple", legitDomains: ["apple.com", "icloud.com", "me.com"] },
@@ -20,21 +32,45 @@ const KNOWN_BRANDS: { name: string; legitDomains: string[] }[] = [
   { name: "Facebook", legitDomains: ["facebook.com", "facebookmail.com"] },
   { name: "Instagram", legitDomains: ["instagram.com", "mail.instagram.com"] },
   { name: "LinkedIn", legitDomains: ["linkedin.com"] },
-  { name: "DHL", legitDomains: ["dhl.com", "dhl.de"] },
-  { name: "FedEx", legitDomains: ["fedex.com"] },
-  { name: "UPS", legitDomains: ["ups.com"] },
-  { name: "IRS", legitDomains: ["irs.gov"] },
-  { name: "HMRC", legitDomains: ["hmrc.gov.uk"] },
-  { name: "Chase", legitDomains: ["chase.com"] },
-  { name: "Bank of America", legitDomains: ["bankofamerica.com"] },
-  { name: "Wells Fargo", legitDomains: ["wellsfargo.com"] },
-  { name: "Stripe", legitDomains: ["stripe.com"] },
+  { name: "Spotify", legitDomains: ["spotify.com", "email.spotify.com"] },
+  { name: "Adobe", legitDomains: ["adobe.com"] },
+  // --- B2B SaaS / dev ---
   { name: "GitHub", legitDomains: ["github.com"] },
+  { name: "GitLab", legitDomains: ["gitlab.com"] },
+  { name: "Slack", legitDomains: ["slack.com"] },
+  { name: "Zoom", legitDomains: ["zoom.us", "zoom.com"] },
+  { name: "Notion", legitDomains: ["notion.so", "notion.com"] },
+  { name: "Linear", legitDomains: ["linear.app"] },
+  { name: "Figma", legitDomains: ["figma.com"] },
+  { name: "Atlassian", legitDomains: ["atlassian.com", "atlassian.net"] },
+  { name: "Jira", legitDomains: ["atlassian.com", "atlassian.net"] },
+  { name: "Confluence", legitDomains: ["atlassian.com", "atlassian.net"] },
+  { name: "AWS", legitDomains: ["amazon.com", "amazonaws.com", "aws.amazon.com"] },
+  { name: "Vercel", legitDomains: ["vercel.com"] },
+  { name: "Cloudflare", legitDomains: ["cloudflare.com"] },
+  { name: "Okta", legitDomains: ["okta.com"] },
+  { name: "Auth0", legitDomains: ["auth0.com"] },
+  { name: "1Password", legitDomains: ["1password.com"] },
+  { name: "LastPass", legitDomains: ["lastpass.com"] },
+  { name: "Twilio", legitDomains: ["twilio.com"] },
+  { name: "SendGrid", legitDomains: ["sendgrid.com", "sendgrid.net"] },
+  { name: "Mailchimp", legitDomains: ["mailchimp.com"] },
+  { name: "Salesforce", legitDomains: ["salesforce.com"] },
+  { name: "HubSpot", legitDomains: ["hubspot.com"] },
+  { name: "Asana", legitDomains: ["asana.com"] },
+  { name: "Trello", legitDomains: ["trello.com"] },
   { name: "Dropbox", legitDomains: ["dropbox.com", "dropboxmail.com"] },
   {
     name: "DocuSign",
     legitDomains: ["docusign.com", "docusign.net", "via.docusign.net"],
   },
+  // --- Shipping / govt ---
+  { name: "DHL", legitDomains: ["dhl.com", "dhl.de"] },
+  { name: "FedEx", legitDomains: ["fedex.com"] },
+  { name: "UPS", legitDomains: ["ups.com"] },
+  { name: "InPost", legitDomains: ["inpost.pl", "inpost.eu"] },
+  { name: "IRS", legitDomains: ["irs.gov"] },
+  { name: "HMRC", legitDomains: ["hmrc.gov.uk"] },
 ];
 
 const FREE_MAIL_DOMAINS = new Set([

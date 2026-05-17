@@ -2,8 +2,10 @@
 
 import {
   ArrowRight,
+  CalendarClock,
   CheckCircle2,
   ChevronDown,
+  Globe2,
   GraduationCap,
   Link2,
   Loader2,
@@ -15,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type {
+  DomainInfoSummary,
   Severity,
   UrlInspectionResponse,
   UrlVerdict,
@@ -371,6 +374,8 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
         ) : null}
       </div>
 
+      {data.domainInfo ? <DomainInfoCard info={data.domainInfo} /> : null}
+
       {analysis.redFlags.length > 0 ? (
         <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -483,6 +488,118 @@ function UrlResultView({ data }: { data: UrlInspectionResponse }) {
       </details>
     </div>
   );
+}
+
+function DomainInfoCard({ info }: { info: DomainInfoSummary }) {
+  const age = info.ageDays;
+  const tone =
+    age !== null && age < 7
+      ? { ring: "ring-rose-400/40", text: "text-rose-200", chip: "bg-rose-500/15" }
+      : age !== null && age < 30
+        ? {
+            ring: "ring-amber-400/40",
+            text: "text-amber-200",
+            chip: "bg-amber-500/15",
+          }
+        : age !== null && age < 180
+          ? {
+              ring: "ring-sky-400/40",
+              text: "text-sky-200",
+              chip: "bg-sky-500/15",
+            }
+          : {
+              ring: "ring-emerald-400/40",
+              text: "text-emerald-200",
+              chip: "bg-emerald-500/15",
+            };
+
+  const ageLabel = info.unknown
+    ? "not disclosed by registry"
+    : age === null
+      ? "—"
+      : age === 0
+        ? "registered today"
+        : `${age} day${age === 1 ? "" : "s"} old`;
+
+  return (
+    <section className={`surface p-5 ring-1 ring-inset ${tone.ring}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Globe2 size={16} className="text-cyan-300" />
+        <h3 className="text-sm font-semibold tracking-tight text-slate-100">
+          Domain intelligence
+        </h3>
+        <span className="text-xs text-muted">
+          live RDAP lookup · cached 1h
+        </span>
+        {age !== null ? (
+          <span
+            className={`ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1 ring-inset ${tone.chip} ${tone.text} ${tone.ring}`}
+          >
+            <CalendarClock size={11} />
+            {ageLabel}
+          </span>
+        ) : null}
+      </div>
+      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
+        <Field label="Domain" value={info.domain} mono />
+        <Field
+          label="Registered"
+          value={info.registered ? formatDate(info.registered) : "unknown"}
+          mono
+        />
+        <Field
+          label="Registrar"
+          value={info.registrar ?? "—"}
+        />
+        <Field
+          label="Expires"
+          value={info.expires ? formatDate(info.expires) : "—"}
+          mono
+        />
+      </dl>
+      {info.unknown ? (
+        <p className="mt-3 text-xs text-muted">
+          The registry returned no registration date — common for ccTLDs (e.g.
+          .pl, .de) and some privacy-focused TLDs. Age can&apos;t be used as a
+          signal here.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="surface-flat p-3">
+      <dt className="text-[10px] uppercase tracking-[0.18em] text-muted">
+        {label}
+      </dt>
+      <dd
+        className={`mt-1 truncate text-sm text-slate-100 ${mono ? "font-mono" : ""}`}
+        title={value}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function formatDate(iso: string): string {
+  const ts = Date.parse(iso);
+  if (!Number.isFinite(ts)) return iso;
+  return new Date(ts).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
 }
 
 function Stat({

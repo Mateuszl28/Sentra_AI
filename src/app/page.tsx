@@ -23,6 +23,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { InboxSimulator } from "@/components/InboxSimulator";
 import { Insights } from "@/components/Insights";
 import { ResultView } from "@/components/ResultView";
+import { ShortcutsPanel } from "@/components/ShortcutsPanel";
 import { MobileTabStrip, Sidebar, type Mode } from "@/components/Sidebar";
 import { useToast } from "@/components/Toast";
 import { Topbar } from "@/components/Topbar";
@@ -50,6 +51,7 @@ export default function HomePage() {
   const [stage, setStage] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [shareBanner, setShareBanner] = useState<{ sharedAt: number } | null>(
     null,
   );
@@ -76,14 +78,35 @@ export default function HomePage() {
 
   useEffect(() => {
     const shared = readShareFromHash();
-    if (!shared) return;
-    /* eslint-disable react-hooks/set-state-in-effect */
-    setMode("analyze");
-    setRaw(shared.rawEmail);
-    setResult(shared.data);
-    setShareBanner({ sharedAt: shared.sharedAt });
-    /* eslint-enable react-hooks/set-state-in-effect */
-    clearShareFromHash();
+    if (shared) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setMode("analyze");
+      setRaw(shared.rawEmail);
+      setResult(shared.data);
+      setShareBanner({ sharedAt: shared.sharedAt });
+      /* eslint-enable react-hooks/set-state-in-effect */
+      clearShareFromHash();
+      return;
+    }
+    // Bookmarklet pre-fill: /?prefill=<base64url(raw text)>
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const prefill = params.get("prefill");
+    if (!prefill) return;
+    try {
+      const b64 = prefill.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = b64 + "===".slice(0, (4 - (b64.length % 4)) % 4);
+      const decoded = decodeURIComponent(escape(atob(padded)));
+      if (decoded.length > 50) {
+        setMode("analyze");
+        setRaw(decoded);
+      }
+    } catch {
+      /* malformed prefill — ignore */
+    } finally {
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState(null, "", cleanUrl);
+    }
   }, []);
 
   useEffect(() => {
@@ -91,7 +114,20 @@ export default function HomePage() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPaletteOpen((o) => !o);
+        return;
       }
+      if (e.key !== "?") return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setShortcutsOpen((o) => !o);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -181,6 +217,7 @@ export default function HomePage() {
           phishyTotal={stats.phishy}
           onOpenHistory={() => setHistoryOpen(true)}
           onOpenCommandPalette={() => setPaletteOpen(true)}
+          onOpenShortcuts={() => setShortcutsOpen(true)}
         />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-24 pt-6 sm:px-8">
@@ -448,6 +485,11 @@ export default function HomePage() {
         history={history.entries}
         onOpenEmail={sendToAnalyzer}
         onOpenUrl={openHistoryUrl}
+      />
+
+      <ShortcutsPanel
+        open={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
       />
     </div>
   );
