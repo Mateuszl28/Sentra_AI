@@ -1,45 +1,85 @@
-import { AlertTriangle, AlertCircle, Info } from "lucide-react";
-import type { LlmRedFlag } from "@/lib/types";
+"use client";
+
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowDownToLine,
+  Info,
+} from "lucide-react";
+import type { LlmRedFlag, Severity } from "@/lib/types";
 
 const SEVERITY_STYLES = {
   high: {
     ring: "ring-rose-500/30",
+    hoverRing: "hover:ring-rose-400/60",
     pill: "bg-rose-500/20 text-rose-200",
     bar: "bg-rose-400",
     Icon: AlertTriangle,
   },
   medium: {
     ring: "ring-amber-500/30",
+    hoverRing: "hover:ring-amber-400/60",
     pill: "bg-amber-500/20 text-amber-200",
     bar: "bg-amber-400",
     Icon: AlertCircle,
   },
   low: {
     ring: "ring-sky-500/30",
+    hoverRing: "hover:ring-sky-400/60",
     pill: "bg-sky-500/20 text-sky-200",
     bar: "bg-sky-400",
     Icon: Info,
   },
   info: {
     ring: "ring-slate-500/30",
+    hoverRing: "hover:ring-slate-400/60",
     pill: "bg-slate-500/20 text-slate-200",
     bar: "bg-slate-400",
     Icon: Info,
   },
-} as const;
+} as const satisfies Record<
+  Severity,
+  {
+    ring: string;
+    hoverRing: string;
+    pill: string;
+    bar: string;
+    Icon: typeof AlertTriangle;
+  }
+>;
 
 export function RedFlagCard({
   flag,
   index,
+  onFocus,
+  isFocused,
 }: {
   flag: LlmRedFlag;
   index: number;
+  onFocus?: () => void;
+  isFocused?: boolean;
 }) {
   const s = SEVERITY_STYLES[flag.severity] ?? SEVERITY_STYLES.medium;
   const Icon = s.Icon;
+  const clickable = !!onFocus && !!flag.evidence;
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-inset ${s.ring} p-5`}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : -1}
+      onClick={clickable ? onFocus : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onFocus?.();
+              }
+            }
+          : undefined
+      }
+      className={`group relative overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-inset p-5 transition-shadow ${s.ring} ${
+        clickable ? `cursor-pointer ${s.hoverRing}` : ""
+      } ${isFocused ? "ring-2 ring-offset-2 ring-offset-slate-950" : ""}`}
     >
       <div className={`absolute left-0 top-0 h-full w-1 ${s.bar}`} />
       <div className="flex items-start gap-3">
@@ -61,6 +101,11 @@ export function RedFlagCard({
             >
               {flag.severity}
             </span>
+            {clickable ? (
+              <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-slate-500 opacity-0 transition-opacity group-hover:opacity-100">
+                <ArrowDownToLine size={11} /> show in source
+              </span>
+            ) : null}
           </div>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             {flag.explanation}

@@ -4,20 +4,41 @@ import {
   ArrowRight,
   CheckCircle2,
   ChevronDown,
-  ExternalLink,
+  ClipboardCheck,
+  ClipboardCopy,
+  Code2,
   GraduationCap,
   Mail,
   Sparkles,
 } from "lucide-react";
 import { useState } from "react";
+import { buildMarkdownReport } from "@/lib/report";
 import type { AnalysisResponse } from "@/lib/types";
+import { AnnotatedSource } from "./AnnotatedSource";
 import { RedFlagCard } from "./RedFlagCard";
 import { RiskGauge } from "./RiskGauge";
 import { VerdictBadge } from "./VerdictBadge";
 
-export function ResultView({ data }: { data: AnalysisResponse }) {
+export function ResultView({
+  data,
+  rawEmail,
+}: {
+  data: AnalysisResponse;
+  rawEmail: string;
+}) {
   const { analysis, parsed, meta, heuristicFindings } = data;
-  const [showRaw, setShowRaw] = useState(false);
+  const [focusedFlagId, setFocusedFlagId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function copyReport() {
+    try {
+      await navigator.clipboard.writeText(buildMarkdownReport(data));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
 
   return (
     <div className="grid gap-6">
@@ -32,11 +53,29 @@ export function ResultView({ data }: { data: AnalysisResponse }) {
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1 text-right text-[11px] text-slate-500">
-            <span className="inline-flex items-center gap-1">
-              <Sparkles size={12} /> {meta.model}
+          <div className="flex shrink-0 flex-col items-end gap-2 text-right">
+            <button
+              type="button"
+              onClick={copyReport}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
+                copied
+                  ? "bg-emerald-500/15 text-emerald-200 ring-emerald-500/40"
+                  : "bg-slate-900/60 text-slate-200 ring-slate-700 hover:bg-slate-800"
+              }`}
+            >
+              {copied ? (
+                <>
+                  <ClipboardCheck size={12} /> Copied
+                </>
+              ) : (
+                <>
+                  <ClipboardCopy size={12} /> Copy report (Markdown)
+                </>
+              )}
+            </button>
+            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+              <Sparkles size={11} /> {meta.model} · {meta.latencyMs} ms
             </span>
-            <span>analysis · {meta.latencyMs} ms</span>
           </div>
         </div>
 
@@ -57,21 +96,46 @@ export function ResultView({ data }: { data: AnalysisResponse }) {
 
       {analysis.redFlags.length > 0 ? (
         <section className="space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold tracking-tight text-slate-100">
               Red flags
             </h2>
             <span className="text-xs text-slate-500">
-              {analysis.redFlags.length} found · ordered by severity
+              {analysis.redFlags.length} found · click any card to highlight in
+              source
             </span>
           </div>
           <div className="grid gap-3">
             {analysis.redFlags.map((flag, i) => (
-              <RedFlagCard key={i} flag={flag} index={i} />
+              <RedFlagCard
+                key={i}
+                flag={flag}
+                index={i}
+                onFocus={() => setFocusedFlagId(`llm-${i}`)}
+                isFocused={focusedFlagId === `llm-${i}`}
+              />
             ))}
           </div>
         </section>
       ) : null}
+
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Code2 size={16} className="text-cyan-400" />
+          <h2 className="text-lg font-semibold tracking-tight text-slate-100">
+            Annotated source
+          </h2>
+          <span className="text-xs text-slate-500">
+            highlights show exactly where each red flag came from
+          </span>
+        </div>
+        <AnnotatedSource
+          raw={rawEmail}
+          redFlags={analysis.redFlags}
+          heuristicFindings={heuristicFindings}
+          focusedFlagId={focusedFlagId}
+        />
+      </section>
 
       <div className="grid gap-6 md:grid-cols-2">
         {analysis.recommendedActions.length > 0 ? (
@@ -121,11 +185,7 @@ export function ResultView({ data }: { data: AnalysisResponse }) {
         </p>
       </Panel>
 
-      <details
-        className="group rounded-2xl border border-slate-800 bg-slate-900/30 p-4"
-        onToggle={(e) => setShowRaw(e.currentTarget.open)}
-        open={showRaw}
-      >
+      <details className="group rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-slate-300">
           <span className="inline-flex items-center gap-2">
             <Mail size={14} /> Deterministic heuristics (
@@ -143,9 +203,15 @@ export function ResultView({ data }: { data: AnalysisResponse }) {
             </span>
           ) : (
             heuristicFindings.map((f) => (
-              <div
+              <button
                 key={f.id}
-                className="rounded-lg border border-slate-800 bg-slate-950/50 p-3"
+                type="button"
+                onClick={() => f.evidence && setFocusedFlagId(f.id)}
+                className={`text-left rounded-lg border border-slate-800 bg-slate-950/50 p-3 transition-colors ${
+                  f.evidence
+                    ? "cursor-pointer hover:border-slate-700 hover:bg-slate-900/60"
+                    : "cursor-default"
+                } ${focusedFlagId === f.id ? "ring-1 ring-sky-400/60" : ""}`}
               >
                 <div className="flex items-center gap-2 text-[11px] text-slate-400">
                   <span className="rounded bg-slate-800/80 px-1.5 py-0.5 font-mono uppercase tracking-wider">
@@ -164,7 +230,7 @@ export function ResultView({ data }: { data: AnalysisResponse }) {
                     {f.evidence}
                   </pre>
                 ) : null}
-              </div>
+              </button>
             ))
           )}
         </div>

@@ -74,7 +74,7 @@ export default function HomePage() {
             <Globe size={12} /> Hack the Tech 2026
           </a>
           <a
-            href="https://github.com/"
+            href="https://github.com/Mateuszl28/Sentra_AI"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/60 px-3 py-1.5 ring-1 ring-inset ring-slate-700 transition hover:text-slate-100"
@@ -130,7 +130,7 @@ export default function HomePage() {
 
       <div ref={resultRef} className="mt-12 scroll-mt-6">
         {result ? (
-          <ResultView data={result} />
+          <ResultView data={result} rawEmail={raw} />
         ) : !loading && !error ? (
           <section className="mt-4 grid gap-3 text-center">
             <div className="mx-auto inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-slate-500">
