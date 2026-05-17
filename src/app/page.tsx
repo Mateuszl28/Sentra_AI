@@ -5,16 +5,23 @@ import {
   Github,
   Globe,
   GraduationCap,
+  Inbox,
+  Link2,
   Loader2,
   ScanSearch,
   ShieldAlert,
+  History as HistoryIcon,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EmailInput } from "@/components/EmailInput";
+import { HistoryPanel } from "@/components/HistoryPanel";
+import { InboxSimulator } from "@/components/InboxSimulator";
 import { Logo } from "@/components/Logo";
 import { ResultView } from "@/components/ResultView";
 import { TrainMode } from "@/components/TrainMode";
+import { UrlInspector } from "@/components/UrlInspector";
 import type { AnalysisResponse } from "@/lib/types";
+import { useHistory } from "@/lib/useHistory";
 
 const LOADING_STAGES = [
   "Parsing MIME structure…",
@@ -24,23 +31,25 @@ const LOADING_STAGES = [
   "Asking Gemini for the verdict…",
 ];
 
-type Mode = "analyze" | "train";
+type Mode = "analyze" | "url" | "train" | "inbox";
 
 export default function HomePage() {
   const [mode, setMode] = useState<Mode>("analyze");
   const [raw, setRaw] = useState("");
+  const [urlSeed, setUrlSeed] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [stage, setStage] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
+  const history = useHistory();
 
   useEffect(() => {
-    if (!loading) {
-      setStage(0);
-      return;
-    }
+    if (!loading) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStage(0);
     const id = window.setInterval(() => {
       setStage((s) => (s + 1) % LOADING_STAGES.length);
     }, 800);
@@ -52,6 +61,14 @@ export default function HomePage() {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [result]);
+
+  const stats = useMemo(() => {
+    const total = history.entries.length;
+    const phishy = history.entries.filter(
+      (e) => e.verdict === "PHISHING" || e.verdict === "MALICIOUS",
+    ).length;
+    return { total, phishy };
+  }, [history.entries]);
 
   async function analyze() {
     setLoading(true);
@@ -65,7 +82,19 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
-      setResult(data as AnalysisResponse);
+      const typed = data as AnalysisResponse;
+      setResult(typed);
+      history.record({
+        kind: "email",
+        label:
+          typed.parsed.subject ||
+          typed.parsed.fromAddress ||
+          "(no subject)",
+        verdict: typed.analysis.verdict,
+        riskScore: typed.analysis.riskScore,
+        timestamp: Date.now(),
+        payload: raw,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error.");
     } finally {
@@ -83,6 +112,11 @@ export default function HomePage() {
     });
   }
 
+  function openHistoryUrl(url: string) {
+    setUrlSeed(url);
+    setMode("url");
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-5 pb-24 pt-6 sm:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -95,13 +129,39 @@ export default function HomePage() {
             label="Analyzer"
           />
           <ModeButton
+            active={mode === "url"}
+            onClick={() => setMode("url")}
+            icon={<Link2 size={13} />}
+            label="URL"
+          />
+          <ModeButton
             active={mode === "train"}
             onClick={() => setMode("train")}
             icon={<GraduationCap size={13} />}
-            label="Train mode"
+            label="Train"
+          />
+          <ModeButton
+            active={mode === "inbox"}
+            onClick={() => setMode("inbox")}
+            icon={<Inbox size={13} />}
+            label="Inbox"
           />
         </div>
         <div className="order-2 flex items-center gap-2 text-xs text-slate-400 sm:order-3">
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            title="Session history (last 25 analyses)"
+            className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/60 px-3 py-1.5 ring-1 ring-inset ring-slate-700 transition hover:text-slate-100"
+          >
+            <HistoryIcon size={12} />
+            <span className="tabular-nums">{stats.total}</span>
+            {stats.phishy > 0 ? (
+              <span className="ml-1 rounded-full bg-rose-500/20 px-1.5 py-px text-[9px] font-semibold text-rose-300">
+                {stats.phishy} ⚠
+              </span>
+            ) : null}
+          </button>
           <a
             href="https://hack-the-tech.devpost.com/"
             target="_blank"
@@ -199,14 +259,44 @@ export default function HomePage() {
             ) : null}
           </div>
         </>
-      ) : (
+      ) : null}
+
+      {mode === "url" ? (
+        <>
+          <section className="mt-12 grid gap-4 text-center sm:mt-16">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-sky-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-sky-300 ring-1 ring-inset ring-sky-500/30">
+              <Link2 size={12} /> URL inspector
+            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+              Hovered over a link and unsure?{" "}
+              <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
+                Drop the URL here first.
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-sm leading-relaxed text-slate-300 sm:text-base">
+              Sentra decomposes the URL — Punycode, lookalike domains, raw IPs,
+              shorteners, suspicious TLDs, @-tricks — without ever fetching it.
+              Gemini explains what it sees, no visit required.
+            </p>
+          </section>
+          <section className="mt-10">
+            <UrlInspector
+              key={urlSeed ?? "fresh"}
+              onRecord={history.record}
+              {...(urlSeed ? { initialUrl: urlSeed } : {})}
+            />
+          </section>
+        </>
+      ) : null}
+
+      {mode === "train" ? (
         <>
           <section className="mt-12 grid gap-4 text-center sm:mt-16">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-cyan-300 ring-1 ring-inset ring-cyan-500/30">
               <GraduationCap size={12} /> Train your eye
             </div>
             <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
-              Five emails. Three guesses each.{" "}
+              Ten emails. Three guesses each.{" "}
               <span className="bg-gradient-to-r from-cyan-300 via-sky-200 to-emerald-200 bg-clip-text text-transparent">
                 How sharp is your inbox sense?
               </span>
@@ -220,7 +310,30 @@ export default function HomePage() {
             <TrainMode onSendToAnalyzer={sendToAnalyzer} />
           </section>
         </>
-      )}
+      ) : null}
+
+      {mode === "inbox" ? (
+        <>
+          <section className="mt-12 grid gap-4 text-center sm:mt-16">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+              <Inbox size={12} /> Inbox simulator
+            </div>
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+              A real-feeling inbox.{" "}
+              <span className="bg-gradient-to-r from-emerald-300 via-sky-200 to-cyan-200 bg-clip-text text-transparent">
+                Triage like Monday morning.
+              </span>
+            </h1>
+            <p className="mx-auto max-w-2xl text-balance text-sm leading-relaxed text-slate-300 sm:text-base">
+              Click any message. Decide before you open: report, trash, or keep.
+              Sentra grades you and shows what you missed.
+            </p>
+          </section>
+          <section className="mt-10">
+            <InboxSimulator onSendToAnalyzer={sendToAnalyzer} />
+          </section>
+        </>
+      ) : null}
 
       <footer className="mt-auto pt-24 text-center text-[11px] text-slate-500">
         <p>
@@ -235,9 +348,19 @@ export default function HomePage() {
           </a>
           {" · "}
           Cybersecurity & Privacy track. Educational tool — verdicts are
-          probabilistic, not a replacement for your email provider's filters.
+          probabilistic, not a replacement for your email provider&apos;s filters.
         </p>
       </footer>
+
+      <HistoryPanel
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        entries={history.entries}
+        onOpenEmail={sendToAnalyzer}
+        onOpenUrl={openHistoryUrl}
+        onClear={history.clear}
+        onRemove={history.remove}
+      />
     </main>
   );
 }

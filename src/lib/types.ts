@@ -99,3 +99,51 @@ export type AnalysisResponse = {
     latencyMs: number;
   };
 };
+
+export type UrlParts = {
+  input: string;
+  normalized: string;
+  protocol: string;
+  hostname: string;
+  unicodeHostname: string;
+  port: string;
+  pathname: string;
+  search: string;
+  hash: string;
+  username: string;
+  password: string;
+  registrableDomain: string;
+  tld: string;
+  subdomainDepth: number;
+};
+
+export type UrlVerdict = "SAFE" | "SUSPICIOUS" | "MALICIOUS";
+
+export type UrlFinding = {
+  id: string;
+  severity: Severity;
+  title: string;
+  detail: string;
+  evidence?: string;
+};
+
+export type UrlLlmAnalysis = {
+  verdict: UrlVerdict;
+  riskScore: number;
+  summary: string;
+  redFlags: LlmRedFlag[];
+  legitimateSignals: string[];
+  recommendedActions: string[];
+  educationalTakeaway: string;
+};
+
+export type UrlInspectionResponse = {
+  parts: UrlParts;
+  heuristicFindings: UrlFinding[];
+  heuristicScore: number;
+  analysis: UrlLlmAnalysis;
+  meta: {
+    model: string;
+    latencyMs: number;
+  };
+};

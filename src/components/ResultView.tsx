@@ -15,8 +15,10 @@ import { useState } from "react";
 import { buildMarkdownReport } from "@/lib/report";
 import type { AnalysisResponse } from "@/lib/types";
 import { AnnotatedSource } from "./AnnotatedSource";
+import { FollowUpChat } from "./FollowUpChat";
 import { RedFlagCard } from "./RedFlagCard";
 import { RiskGauge } from "./RiskGauge";
+import { ShareButton } from "./ShareButton";
 import { VerdictBadge } from "./VerdictBadge";
 
 export function ResultView({
@@ -54,25 +56,28 @@ export function ResultView({
             </div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2 text-right">
-            <button
-              type="button"
-              onClick={copyReport}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
-                copied
-                  ? "bg-emerald-500/15 text-emerald-200 ring-emerald-500/40"
-                  : "bg-slate-900/60 text-slate-200 ring-slate-700 hover:bg-slate-800"
-              }`}
-            >
-              {copied ? (
-                <>
-                  <ClipboardCheck size={12} /> Copied
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy size={12} /> Copy report (Markdown)
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <ShareButton data={data} rawEmail={rawEmail} />
+              <button
+                type="button"
+                onClick={copyReport}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-all ${
+                  copied
+                    ? "bg-emerald-500/15 text-emerald-200 ring-emerald-500/40"
+                    : "bg-slate-900/60 text-slate-200 ring-slate-700 hover:bg-slate-800"
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <ClipboardCheck size={12} /> Copied
+                  </>
+                ) : (
+                  <>
+                    <ClipboardCopy size={12} /> Copy report
+                  </>
+                )}
+              </button>
+            </div>
             <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
               <Sparkles size={11} /> {meta.model} · {meta.latencyMs} ms
             </span>
@@ -184,6 +189,8 @@ export function ResultView({
           {analysis.educationalTakeaway}
         </p>
       </Panel>
+
+      <FollowUpChat data={data} rawEmail={rawEmail} />
 
       <details className="group rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-slate-300">

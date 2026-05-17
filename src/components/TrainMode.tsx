@@ -137,7 +137,7 @@ export function TrainMode({
           <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           <span className="ml-2 font-mono tracking-tight">
-            read carefully — what's your call?
+            read carefully — what&apos;s your call?
           </span>
         </div>
         <pre className="max-h-[420px] overflow-auto scrollbar-thin whitespace-pre-wrap break-words rounded-2xl bg-slate-950/60 p-4 font-mono text-[11.5px] leading-[1.55] text-slate-300">

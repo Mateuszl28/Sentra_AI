@@ -1,8 +1,17 @@
 "use client";
 
-import { Loader2, Sparkles, Upload, X } from "lucide-react";
-import { useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Info,
+  Loader2,
+  ShieldAlert,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { EXAMPLES, type EmailExample } from "@/lib/examples";
+import { runLiveHeuristics, type LiveFinding } from "@/lib/live-heuristics";
 
 type Props = {
   value: string;
@@ -21,6 +30,19 @@ export function EmailInput({
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [activeExample, setActiveExample] = useState<string | null>(null);
+  const [liveFindings, setLiveFindings] = useState<LiveFinding[]>([]);
+
+  useEffect(() => {
+    if (!value || value.length < 20) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLiveFindings([]);
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      setLiveFindings(runLiveHeuristics(value));
+    }, 250);
+    return () => window.clearTimeout(handle);
+  }, [value]);
 
   function handleFile(file: File | undefined) {
     if (!file) return;
@@ -76,6 +98,8 @@ export function EmailInput({
         />
       </div>
 
+      <LiveHeuristicChips findings={liveFindings} hasContent={value.length > 20} />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -119,6 +143,9 @@ export function EmailInput({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <span className="self-center text-[11px] uppercase tracking-[0.18em] text-slate-500">
+          examples →
+        </span>
         {EXAMPLES.map((ex) => (
           <button
             key={ex.id}
@@ -146,6 +173,57 @@ export function EmailInput({
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function LiveHeuristicChips({
+  findings,
+  hasContent,
+}: {
+  findings: LiveFinding[];
+  hasContent: boolean;
+}) {
+  if (!hasContent) return null;
+  if (findings.length === 0) {
+    return (
+      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
+        <span className="font-mono uppercase tracking-[0.18em]">
+          Live check · no obvious red flags yet
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
+        live check ·
+      </span>
+      {findings.map((f) => {
+        const Icon =
+          f.tone === "danger"
+            ? ShieldAlert
+            : f.tone === "warn"
+              ? AlertTriangle
+              : Info;
+        const cls =
+          f.tone === "danger"
+            ? "bg-rose-500/15 text-rose-200 ring-rose-400/30"
+            : f.tone === "warn"
+              ? "bg-amber-500/15 text-amber-200 ring-amber-400/30"
+              : "bg-sky-500/15 text-sky-200 ring-sky-400/30";
+        return (
+          <span
+            key={f.id}
+            title={f.detail}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${cls}`}
+          >
+            <Icon size={10} strokeWidth={2.4} />
+            {f.label}
+          </span>
+        );
+      })}
     </div>
   );
 }
