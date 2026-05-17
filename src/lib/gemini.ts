@@ -9,7 +9,7 @@ import type {
   ParsedEmail,
 } from "@/lib/types";
 
-const MODEL_ID = "gemini-2.0-flash";
+const MODEL_ID = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
 const RESPONSE_SCHEMA: ResponseSchema = {
   type: SchemaType.OBJECT,
